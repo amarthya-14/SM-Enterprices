@@ -27,7 +27,9 @@ export default function Create() {
             setError(null);
             setCurrentCategory(category);
             setSelectedProducts([]);
-            const res = await axios.get(`http://localhost:8080/details/${encodeURIComponent(category)}`);
+            const res = await axios.get(
+                `${import.meta.env.VITE_BACKEND_URL}/details/${encodeURIComponent(category)}`
+            );
             if (!Array.isArray(res.data)) throw new Error("Expected array");
             setSelectedProducts(res.data);
 
