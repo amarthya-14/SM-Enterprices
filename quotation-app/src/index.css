@@ -479,3 +479,8 @@ body {
   transform: translateY(-3px) scale(1.05);
   box-shadow: 0 10px 24px rgba(212, 184, 94, 0.6);
 }
+@media print {
+  .printable-content {
+    display: block !important; /* Ensure the hidden div is visible during print */
+  }
+}

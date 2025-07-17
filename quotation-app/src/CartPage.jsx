@@ -13,7 +13,6 @@ export default function CartPage() {
     const [includeKordz, setIncludeKordz] = useState(false);
     const [kordzPrice, setKordzPrice] = useState("");
 
-    // Convert cart to items, excluding Kordz for the main table
     let cartItems = Object.entries(cart).map(([key, quantity], index) => {
         const product = allProducts[key];
         if (!product) return null;
@@ -32,6 +31,7 @@ export default function CartPage() {
             product,
         };
     }).filter(Boolean);
+
     function numberToWords(n) {
         const a = [
             "", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
@@ -64,13 +64,11 @@ export default function CartPage() {
         return str.trim() + " Rupees Only";
     }
 
-
-    // Create separate Kordz item if selected
     let kordzItem = null;
     if (includeKordz && !isNaN(parseFloat(kordzPrice))) {
         kordzItem = {
             key: "kordz-cables",
-            sNo: cartItems.length + 1, // Continue S.No from products table
+            sNo: cartItems.length + 1,
             name: "Kordz-Cables and Accessories",
             description:
                 "Kordz 4K Supported HDMI cable (10 mtrs.), Kordz 16Gauge Speaker cable, Subwoofer Cable, Universal projector ceiling mount bracket, UPS, Stabilizer, Apple TV",
@@ -81,29 +79,22 @@ export default function CartPage() {
         };
     }
 
-    // Calculate subtotal for products excluding Kordz
     const productsSubtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
     const discountAmount = (productsSubtotal * discount) / 100;
     const kordzTotal = kordzItem ? kordzItem.totalPrice : 0;
     const finalTotal = productsSubtotal - discountAmount + kordzTotal;
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         const element = componentRef.current;
+        await new Promise((resolve) => setTimeout(resolve, 500)); // Wait for rendering
         html2pdf()
             .from(element)
             .set({
                 margin: 10,
                 filename: "quotation.pdf",
-                html2canvas: {
-                    scale: 3,
-                    backgroundColor: "#ffffff",
-                },
-                jsPDF: {
-                    orientation: "portrait",
-                    unit: "mm",
-                    format: "a4",
-                },
-                pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
+                pagebreak: { mode: ["css"], avoid: ["tr"] },
             })
             .save();
     };
@@ -215,12 +206,12 @@ export default function CartPage() {
                 </button>
             </div>
 
-            {/* Hidden printable component */}
             <div style={{ display: "none" }}>
                 <div
                     ref={componentRef}
+                    className="printable-content"
                     style={{
-                        padding: "40px",
+                        padding: "20px",
                         fontFamily: "'Poppins', sans-serif",
                         backgroundColor: "#121212",
                         color: "#eee",
@@ -277,16 +268,16 @@ export default function CartPage() {
                             width: "100%",
                             borderCollapse: "collapse",
                             marginTop: "25px",
-                            fontSize: "0.95rem",
-                            tableLayout: "fixed",
+                            fontSize: "0.9rem",
+                            tableLayout: "auto",
                         }}
                     >
                         <thead>
                         <tr style={{ backgroundColor: "#333", color: "#d4b85e" }}>
-                            <th style={{ ...headerCell, width: "8%" }}>S.No</th>
-                            <th style={{ ...headerCell, width: "25%" }}>Name</th>
-                            <th style={{ ...headerCell, width: "30%" }}>Description</th>
-                            <th style={{ ...headerCell, width: "12%" }}>Price (₹)</th>
+                            <th style={{ ...headerCell, width: "10%" }}>S.No</th>
+                            <th style={{ ...headerCell, width: "20%" }}>Name</th>
+                            <th style={{ ...headerCell, width: "35%" }}>Description</th>
+                            <th style={{ ...headerCell, width: "15%" }}>Price (₹)</th>
                             <th style={{ ...headerCell, width: "10%" }}>Qty</th>
                             <th style={{ ...headerCell, width: "15%" }}>Total (₹)</th>
                         </tr>
@@ -302,7 +293,7 @@ export default function CartPage() {
                             >
                                 <td style={bodyCell}>{item.sNo}</td>
                                 <td style={bodyCell}>{item.name}</td>
-                                <td style={{ ...bodyCell, fontSize: "0.85rem" }}>{item.description}</td>
+                                <td style={{ ...bodyCell, fontSize: "0.8rem" }}>{item.description}</td>
                                 <td style={bodyCell}>{Math.round(item.price)}</td>
                                 <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
                                 <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
@@ -323,24 +314,33 @@ export default function CartPage() {
                         <p>Subtotal After Discount: ₹{(productsSubtotal - discountAmount).toFixed(2)}</p>
                     </div>
 
-                    { kordzItem && (
-                        <div
+                    {kordzItem && (
+                        <table
                             style={{
-                                display: "flex",
-                                background: kordzItem.sNo % 2 === 0 ? "#1f1f1f" : "#2a2a2a",
-                                pageBreakInside: "avoid",
+                                width: "100%",
+                                borderCollapse: "collapse",
+                                marginTop: "20px",
+                                fontSize: "0.9rem",
+                                tableLayout: "auto",
                             }}
                         >
-                            <div style={{ ...bodyCell, width: "8%" }}>{kordzItem.sNo}</div>
-                            <div style={{ ...bodyCell, width: "25%" }}>{kordzItem.name}</div>
-                            <div style={{ ...bodyCell, width: "30%", fontSize: "0.85rem" }}>{kordzItem.description}</div>
-                            <div style={{ ...bodyCell, width: "12%" }}>₹{Math.round(kordzItem.price)}</div>
-                            <div style={{ ...bodyCell, width: "10%", textAlign: "center" }}>{kordzItem.quantity}</div>
-                            <div style={{ ...bodyCell, width: "15%" }}>₹{Math.round(kordzItem.totalPrice)}</div>
-                        </div>
+                            <tbody>
+                            <tr
+                                style={{
+                                    background: cartItems.length % 2 === 0 ? "#1f1f1f" : "#2a2a2a",
+                                    pageBreakInside: "avoid",
+                                }}
+                            >
+                                <td style={{ ...bodyCell, width: "10%" }}>{kordzItem.sNo}</td>
+                                <td style={{ ...bodyCell, width: "20%" }}>{kordzItem.name}</td>
+                                <td style={{ ...bodyCell, width: "35%", fontSize: "0.8rem" }}>{kordzItem.description}</td>
+                                <td style={{ ...bodyCell, width: "15%" }}>₹{Math.round(kordzItem.price)}</td>
+                                <td style={{ ...bodyCell, width: "10%", textAlign: "center" }}>{kordzItem.quantity}</td>
+                                <td style={{ ...bodyCell, width: "15%" }}>₹{Math.round(kordzItem.totalPrice)}</td>
+                            </tr>
+                            </tbody>
+                        </table>
                     )}
-
-
 
                     <div style={{
                         textAlign: "right",
@@ -371,14 +371,14 @@ export default function CartPage() {
 }
 
 const headerCell = {
-    padding: "12px",
+    padding: "8px", // Reduced padding
     textAlign: "left",
     fontWeight: "600",
     borderBottom: "1px solid #555",
 };
 
 const bodyCell = {
-    padding: "10px",
+    padding: "8px", // Reduced padding
     borderBottom: "1px solid #333",
     color: "#eee",
 };
