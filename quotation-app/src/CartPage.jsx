@@ -10,8 +10,11 @@ export default function CartPage() {
 
     const [discount, setDiscount] = useState(0);
     const [quotationTitle, setQuotationTitle] = useState("Quotation for Home Theatre 7.1.4");
+    const [includeKordz, setIncludeKordz] = useState(false);
+    const [kordzPrice, setKordzPrice] = useState("");
 
-    const cartItems = Object.entries(cart).map(([key, quantity], index) => {
+    // Convert cart to items, excluding Kordz for the main table
+    let cartItems = Object.entries(cart).map(([key, quantity], index) => {
         const product = allProducts[key];
         if (!product) return null;
 
@@ -19,20 +22,70 @@ export default function CartPage() {
         const totalPrice = price * quantity;
 
         return {
-            key,               // Keep the composite key
+            key,
             sNo: index + 1,
             name: product.name,
             description: product.description || "",
             price,
             quantity,
             totalPrice,
-            product,          // Also store full product reference
+            product,
         };
     }).filter(Boolean);
+    function numberToWords(n) {
+        const a = [
+            "", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
+            "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen",
+            "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen",
+        ];
+        const b = [
+            "", "", "Twenty", "Thirty", "Forty", "Fifty",
+            "Sixty", "Seventy", "Eighty", "Ninety"
+        ];
 
-    const subTotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-    const discountAmount = (subTotal * discount) / 100;
-    const finalTotal = subTotal - discountAmount;
+        if ((n = n.toString()).length > 9) return "Overflow";
+        let num = ('000000000' + n).substr(-9).match(/.{1,3}/g);
+        let str = '';
+        let i = 0;
+
+        const units = ["Crore", "Lakh", "Thousand", "Hundred", ""];
+        for (; i < 5; i++) {
+            let n = parseInt(num[i]);
+            if (n) {
+                let h = Math.floor(n / 100);
+                let rem = n % 100;
+                let word = "";
+                if (h) word += a[h] + " Hundred ";
+                if (rem < 20) word += a[rem];
+                else word += b[Math.floor(rem / 10)] + (rem % 10 ? " " + a[rem % 10] : "");
+                str += word + " " + units[i] + " ";
+            }
+        }
+        return str.trim() + " Rupees Only";
+    }
+
+
+    // Create separate Kordz item if selected
+    let kordzItem = null;
+    if (includeKordz && !isNaN(parseFloat(kordzPrice))) {
+        kordzItem = {
+            key: "kordz-cables",
+            sNo: cartItems.length + 1, // Continue S.No from products table
+            name: "Kordz-Cables and Accessories",
+            description:
+                "Kordz 4K Supported HDMI cable (10 mtrs.), Kordz 16Gauge Speaker cable, Subwoofer Cable, Universal projector ceiling mount bracket, UPS, Stabilizer, Apple TV",
+            price: parseFloat(kordzPrice),
+            quantity: 1,
+            totalPrice: parseFloat(kordzPrice),
+            product: null,
+        };
+    }
+
+    // Calculate subtotal for products excluding Kordz
+    const productsSubtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const discountAmount = (productsSubtotal * discount) / 100;
+    const kordzTotal = kordzItem ? kordzItem.totalPrice : 0;
+    const finalTotal = productsSubtotal - discountAmount + kordzTotal;
 
     const handleDownload = () => {
         const element = componentRef.current;
@@ -41,8 +94,16 @@ export default function CartPage() {
             .set({
                 margin: 10,
                 filename: "quotation.pdf",
-                html2canvas: { scale: 2, backgroundColor: "#ffffff" },
-                jsPDF: { orientation: "portrait" },
+                html2canvas: {
+                    scale: 3,
+                    backgroundColor: "#ffffff",
+                },
+                jsPDF: {
+                    orientation: "portrait",
+                    unit: "mm",
+                    format: "a4",
+                },
+                pagebreak: { mode: ["avoid-all", "css", "legacy"] },
             })
             .save();
     };
@@ -52,7 +113,7 @@ export default function CartPage() {
         setDiscount(isNaN(value) ? 0 : value);
     };
 
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !kordzItem) {
         return (
             <div className="cart-page">
                 <h2>Your cart is empty</h2>
@@ -65,7 +126,6 @@ export default function CartPage() {
 
     return (
         <>
-            {/* Cart UI */}
             <div className="cart-page">
                 <h2>Your Cart</h2>
                 {cartItems.map((item) => (
@@ -81,7 +141,6 @@ export default function CartPage() {
                         </div>
                     </div>
                 ))}
-
 
                 <div style={{ marginTop: "20px" }}>
                     <label style={{ marginRight: "10px" }}>Discount (%):</label>
@@ -115,6 +174,39 @@ export default function CartPage() {
                     />
                 </div>
 
+                <div style={{ marginTop: "15px" }}>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={includeKordz}
+                            onChange={(e) => {
+                                setIncludeKordz(e.target.checked);
+                                if (!e.target.checked) setKordzPrice("");
+                            }}
+                            style={{ marginRight: "10px" }}
+                        />
+                        Add Kordz Cables and Accessories
+                    </label>
+                    {includeKordz && (
+                        <div style={{ marginTop: "10px" }}>
+                            <label style={{ marginRight: "10px" }}>Price (₹):</label>
+                            <input
+                                type="number"
+                                value={kordzPrice}
+                                onChange={(e) => setKordzPrice(e.target.value)}
+                                placeholder="Enter price"
+                                style={{
+                                    width: "160px",
+                                    padding: "6px 8px",
+                                    borderRadius: "6px",
+                                    border: "1px solid #ccc",
+                                    fontSize: "1rem",
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+
                 <button className="checkout-button" onClick={handleDownload}>
                     Download PDF
                 </button>
@@ -135,62 +227,37 @@ export default function CartPage() {
                         maxWidth: "900px",
                         margin: "0 auto",
                         borderRadius: "10px",
+                        pageBreakInside: "auto",
                     }}
                 >
-                    {/* Header */}
                     <div style={{ textAlign: "center", marginBottom: "25px" }}>
                         <h1
                             style={{
                                 margin: "0 0 10px 0",
                                 fontSize: "2.5rem",
                                 color: "#d4b85e",
-                                fontFamily: "'Playfair Display', serif", // 👈 a classy display font, no weird spacing
+                                fontFamily: "'Playfair Display', serif",
                                 fontWeight: 700,
                                 lineHeight: "1.2",
                             }}
                         >
-                            SM  Enterprises
+                            SM Enterprises
                         </h1>
-                        <p
-                            style={{
-                                margin: "10px 0",
-                                fontSize: "1rem",
-                                lineHeight: "1.6",
-                                color: "#ccc",
-                            }}
-                        >
+                        <p style={{ margin: "10px 0", fontSize: "1rem", lineHeight: "1.6", color: "#ccc" }}>
                             D no:6/544, Jeenigala Street, Opp: Ramana Reddy Lorry Transport,<br />
-                             StonehousePet, Nellore-524002.<br />
-                            SPSR Nellore Dist, ContactNo: 9848430077,9908024119
+                            StonehousePet, Nellore-524002.<br />
+                            SPSR Nellore Dist, ContactNo: 9848430077, 9908024119
                         </p>
-                        <div
-                            style={{
-                                height: "3px",
-                                width: "80px",
-                                backgroundColor: "#d4b85e",
-                                margin: "16px auto 0",
-                                borderRadius: "2px",
-                            }}
-                        />
-                        <p
-                            style={{
-                                margin: "10px 0 0 0",
-                                fontSize: "0.95rem",
-                                textAlign: "right",
-                                color: "#bbb",
-                            }}
-                        >
+                        <div style={{ height: "3px", width: "80px", backgroundColor: "#d4b85e", margin: "16px auto 0", borderRadius: "2px" }} />
+                        <p style={{ margin: "10px 0 0 0", fontSize: "0.95rem", textAlign: "right", color: "#bbb" }}>
                             Date: {new Date().toLocaleDateString("en-IN", {
                             day: "2-digit",
                             month: "long",
                             year: "numeric",
                         })}
-
                         </p>
-
                     </div>
 
-                    {/* Title */}
                     <h2
                         style={{
                             textAlign: "center",
@@ -205,7 +272,6 @@ export default function CartPage() {
                         {quotationTitle}
                     </h2>
 
-                    {/* Table */}
                     <table
                         style={{
                             width: "100%",
@@ -231,79 +297,75 @@ export default function CartPage() {
                                 key={idx}
                                 style={{
                                     background: idx % 2 === 0 ? "#1f1f1f" : "#2a2a2a",
+                                    pageBreakInside: "avoid",
                                 }}
                             >
-                                <td style={{ ...bodyCell, padding: "8px" }}>{item.sNo}</td>
-                                <td style={{ ...bodyCell, wordWrap: "break-word", padding: "8px" }}>
-                                    {item.name}
-                                </td>
-                                <td
-                                    style={{
-                                        ...bodyCell,
-                                        wordWrap: "break-word",
-                                        fontSize: "0.85rem",
-                                        padding: "8px",
-                                    }}
-                                >
-                                    {item.description}
-                                </td>
-                                <td style={{ ...bodyCell, padding: "8px" }}>{Math.round(item.price)
-                                }</td>
-                                <td style={{ ...bodyCell, padding: "8px",textAlign: "center" }}>{item.quantity}</td>
-                                <td style={{ ...bodyCell, padding: "8px" }}>{Math.round(item.totalPrice)}</td>
+                                <td style={bodyCell}>{item.sNo}</td>
+                                <td style={bodyCell}>{item.name}</td>
+                                <td style={{ ...bodyCell, fontSize: "0.85rem" }}>{item.description}</td>
+                                <td style={bodyCell}>{Math.round(item.price)}</td>
+                                <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
+                                <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
 
-
-
-
-                    {/* Totals */}
-                    <div
-                        style={{
-                            textAlign: "right",
-                            marginTop: "30px",
-                            fontSize: "1rem",
-                            lineHeight: "1.8",
-                            color: "#eee",
-                        }}
-                    >
-                        <p>Subtotal: ₹{subTotal.toFixed(2)}</p>
+                    <div style={{
+                        textAlign: "right",
+                        marginTop: "30px",
+                        fontSize: "1rem",
+                        lineHeight: "1.8",
+                        color: "#eee",
+                    }}>
+                        <p>All Products Subtotal: ₹{productsSubtotal.toFixed(2)}</p>
                         <p>Discount ({discount}%): -₹{discountAmount.toFixed(2)}</p>
-                        <p
+                        <p>Subtotal After Discount: ₹{(productsSubtotal - discountAmount).toFixed(2)}</p>
+                    </div>
+
+                    { kordzItem && (
+                        <div
                             style={{
-                                fontWeight: "bold",
-                                fontSize: "1.2rem",
-                                color: "#d4b85e",
+                                display: "flex",
+                                background: kordzItem.sNo % 2 === 0 ? "#1f1f1f" : "#2a2a2a",
+                                pageBreakInside: "avoid",
                             }}
                         >
-                            Final Total: ₹{finalTotal.toFixed(2)}
+                            <div style={{ ...bodyCell, width: "8%" }}>{kordzItem.sNo}</div>
+                            <div style={{ ...bodyCell, width: "25%" }}>{kordzItem.name}</div>
+                            <div style={{ ...bodyCell, width: "30%", fontSize: "0.85rem" }}>{kordzItem.description}</div>
+                            <div style={{ ...bodyCell, width: "12%" }}>₹{Math.round(kordzItem.price)}</div>
+                            <div style={{ ...bodyCell, width: "10%", textAlign: "center" }}>{kordzItem.quantity}</div>
+                            <div style={{ ...bodyCell, width: "15%" }}>₹{Math.round(kordzItem.totalPrice)}</div>
+                        </div>
+                    )}
+
+
+
+                    <div style={{
+                        textAlign: "right",
+                        marginTop: "20px",
+                        fontSize: "1rem",
+                        lineHeight: "1.8",
+                        color: "#eee",
+                    }}>
+                        <p style={{ fontWeight: "bold", fontSize: "1.2rem", color: "#d4b85e" }}>
+                            Final Amount: ₹{finalTotal.toFixed(2)}
                         </p>
                     </div>
 
-                    <hr
-                        style={{
-                            margin: "30px 0",
-                            borderTop: "1px dashed #555",
-                        }}
-                    />
-                    <p
-                        style={{
-                            textAlign: "center",
-                            fontStyle: "italic",
-                            color: "#888",
-                            marginTop: "20px",
-                            fontSize: "0.95rem",
-                        }}
-                    >
+                    <hr style={{ margin: "30px 0", borderTop: "1px dashed #555" }} />
+                    <p style={{
+                        textAlign: "center",
+                        fontStyle: "italic",
+                        color: "#888",
+                        marginTop: "20px",
+                        fontSize: "0.95rem",
+                    }}>
                         Thank you for your business! We look forward to serving you again.
                     </p>
                 </div>
             </div>
-
-
-
         </>
     );
 }
