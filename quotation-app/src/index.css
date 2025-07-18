@@ -484,3 +484,130 @@ body {
     display: block !important; /* Ensure the hidden div is visible during print */
   }
 }
+.create-buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.quotation-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.quotation-table th, .quotation-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+.acoustic-option {
+  margin-bottom: 1rem;
+}
+.acoustic-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d4b85e;
+  border-radius: 4px;
+  background-color: transparent;
+  position: relative;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.acoustic-item input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 8px;
+  border-right: 2px solid #121212;
+  border-bottom: 2px solid #121212;
+  transform: rotate(45deg);
+  top: 2px;
+  left: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.acoustic-item input[type="checkbox"]:checked {
+  background-color: #d4b85e;
+}
+
+.acoustic-item input[type="checkbox"]:checked::before {
+  opacity: 1;
+}
+
+.acoustic-item label {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #eee;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 8px;
+}
+.acoustic-item .inputs {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0 16px;
+}
+
+.acoustic-item .inputs input[type="number"] {
+  padding: 8px 12px;
+  border: 1.5px solid #d4b85e;
+  background-color: #1a1a1a;
+  color: #f5f5f5;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 120px;
+}
+
+.acoustic-item .inputs input[type="number"]::placeholder {
+  color: #aaaaaa;
+}
+
+.acoustic-item .inputs input[type="number"]:focus {
+  border-color: #f7cc6b;
+  box-shadow: 0 0 5px #d4b85e66;
+}
+.download-pdf {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  background-color: #d4b85e;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.download-pdf:hover {
+  background-color: #f7cc6b;
+  box-shadow: 0 0 8px #d4b85e66;
+  transform: translateY(-2px);
+}
+.quotation-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* updated from 'flex-start' to 'center' */
+  padding: 40px 20px;
+  min-height: 100vh;
+  background-color: #121212;
+}
+
+
+.create-quotation {
+  max-width: 800px;
+  width: 100%;
+  background-color: #1a1a1a;
+  color: #f5f5f5;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #00000033;
+}
+
+
+
