@@ -13,7 +13,7 @@ export default function Create() {
         "AV Receiver",
         "Projectors",
         "Screen",
-        "Power Amplifier"
+
     ];
 
     const [mode, setMode] = useState(null);
