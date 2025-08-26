@@ -8,12 +8,9 @@ export default function CartPage() {
     const navigate = useNavigate();
     const componentRef = useRef();
 
-    // Debugging logs
-    console.log("Cart:", cart);
-    console.log("All Products:", allProducts);
-
     const [discount, setDiscount] = useState(0);
     const [quotationTitle, setQuotationTitle] = useState("Quotation for Home Theatre 7.1.4");
+    const [customerName, setCustomerName] = useState(""); // ✅ Customer name state
     const [includeKordz, setIncludeKordz] = useState(false);
     const [kordzPrice, setKordzPrice] = useState("");
     const [includePowerAmp, setIncludePowerAmp] = useState(false);
@@ -21,14 +18,9 @@ export default function CartPage() {
 
     let cartItems = Object.entries(cart).map(([key, quantity], index) => {
         const product = allProducts[key];
-        if (!product) {
-            console.warn(`Product not found for key: ${key}`);
-            return null;
-        }
-
+        if (!product) return null;
         const price = parseFloat(product.price || 0);
         const totalPrice = price * quantity;
-
         return {
             key,
             sNo: index + 1,
@@ -58,7 +50,7 @@ export default function CartPage() {
     if (includeKordz && !isNaN(parseFloat(kordzPrice))) {
         kordzItem = {
             key: "kordz-cables",
-            sNo: cartItems.length + 1, // Set S.No after Power Amplifier is added
+            sNo: cartItems.length + 1,
             name: "Kordz-Cables and Accessories",
             description:
                 "Kordz 4K Supported HDMI cable (10 mtrs.), Kordz 16Gauge Speaker cable, Subwoofer Cable, Universal projector ceiling mount bracket, UPS, Stabilizer, Apple TV",
@@ -77,21 +69,24 @@ export default function CartPage() {
     const handleDownload = async () => {
         try {
             const element = componentRef.current;
-            if (!element) {
-                console.error("PDF element not found");
-                return;
-            }
+            if (!element) return;
+
             await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // ✅ Add customer name in filename (sanitize spaces)
+            const safeCustomerName = customerName ? customerName.replace(/\s+/g, "_") : "customer";
+
             html2pdf()
-                .from(element)
+                .from(componentRef.current)
                 .set({
+                    filename: `${customerName || "untitled"}-quotation.pdf`,
                     margin: 10,
-                    filename: "quotation.pdf",
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
-                    pagebreak: { mode: ["css"], avoid: ["tr"] },
+                    image: { type: "jpeg", quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
                 })
                 .save();
+
         } catch (error) {
             console.error("PDF generation failed:", error);
         }
@@ -117,26 +112,24 @@ export default function CartPage() {
         <>
             <div className="cart-page">
                 <h2>Your Cart</h2>
-                {cartItems.length === 0 ? (
-                    <p>No items in cart.</p>
-                ) : (
-                    cartItems.map((item) => (
-                        <div key={item.key} className="cart-item">
-                            <div className="cart-item-details">
-                                <p className="cart-item-name">{item.name}</p>
-                                <p className="cart-item-quantity">Quantity: {item.quantity}</p>
-                            </div>
-                            {item.product && (
-                                <div className="cart-counter">
-                                    <button onClick={() => decrementItem(item.product, item.product.category)}>-</button>
-                                    <span>{item.quantity}</span>
-                                    <button onClick={() => incrementItem(item.product, item.product.category)}>+</button>
-                                </div>
-                            )}
-                        </div>
-                    ))
-                )}
 
+                {cartItems.map((item) => (
+                    <div key={item.key} className="cart-item">
+                        <div className="cart-item-details">
+                            <p className="cart-item-name">{item.name}</p>
+                            <p className="cart-item-quantity">Quantity: {item.quantity}</p>
+                        </div>
+                        {item.product && (
+                            <div className="cart-counter">
+                                <button onClick={() => decrementItem(item.product, item.product.category)}>-</button>
+                                <span>{item.quantity}</span>
+                                <button onClick={() => incrementItem(item.product, item.product.category)}>+</button>
+                            </div>
+                        )}
+                    </div>
+                ))}
+
+                {/* Discount input */}
                 <div style={{ marginTop: "20px" }}>
                     <label style={{ marginRight: "10px" }}>Discount (%):</label>
                     <input
@@ -153,6 +146,7 @@ export default function CartPage() {
                     />
                 </div>
 
+                {/* Quotation Title input */}
                 <div style={{ marginTop: "15px" }}>
                     <label style={{ marginRight: "10px" }}>Quotation Title:</label>
                     <input
@@ -169,6 +163,25 @@ export default function CartPage() {
                     />
                 </div>
 
+                {/* ✅ Customer Name input */}
+                <div style={{ marginTop: "15px" }}>
+                    <label style={{ marginRight: "10px" }}>Customer Name:</label>
+                    <input
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Enter customer name"
+                        style={{
+                            width: "250px",
+                            padding: "6px 8px",
+                            borderRadius: "6px",
+                            border: "1px solid #ccc",
+                            fontSize: "1rem",
+                        }}
+                    />
+                </div>
+
+                {/* Kordz toggle */}
                 <div style={{ marginTop: "15px" }}>
                     <label>
                         <input
@@ -202,6 +215,7 @@ export default function CartPage() {
                     )}
                 </div>
 
+                {/* Power Amp toggle */}
                 <div style={{ marginTop: "15px" }}>
                     <label>
                         <input
@@ -255,6 +269,7 @@ export default function CartPage() {
                     kordzTotal={kordzTotal}
                     finalTotal={finalTotal}
                     quotationTitle={quotationTitle}
+                    customerName={customerName}   // ✅ Pass to PDF
                 />
             </div>
         </>
@@ -271,11 +286,11 @@ function PDFQuotation({
                           kordzTotal,
                           finalTotal,
                           quotationTitle,
+                          customerName,   // ✅ Added
                       }) {
     return (
         <div
             ref={componentRef}
-            className="printable-content"
             style={{
                 padding: "20px",
                 fontFamily: "'Poppins', sans-serif",
@@ -284,20 +299,11 @@ function PDFQuotation({
                 maxWidth: "900px",
                 margin: "0 auto",
                 borderRadius: "10px",
-                pageBreakInside: "auto",
             }}
         >
             {/* Header */}
             <div style={{ textAlign: "center", marginBottom: "25px" }}>
-                <h1
-                    style={{
-                        margin: "0 0 10px 0",
-                        fontSize: "2.5rem",
-                        color: "#d4b85e",
-                        fontFamily: "'Playfair Display', serif",
-                        fontWeight: 700,
-                    }}
-                >
+                <h1 style={{ margin: "0 0 10px 0", fontSize: "2.5rem", color: "#d4b85e" }}>
                     SM Enterprises
                 </h1>
                 <p style={{ color: "#ccc", marginBottom: 0 }}>
@@ -316,12 +322,17 @@ function PDFQuotation({
                 </p>
             </div>
 
-            {/* Title */}
+            {/* Title + Customer */}
+            {customerName && (
+                <p style={{ textAlign: "left", fontSize: "1rem", color: "#ddd", marginTop: "10px", marginLeft: "20px" }}>
+                    Client: <span style={{ fontWeight: "600", color: "#fff" }}>{customerName}</span>
+                </p>
+            )}
             <h2
                 style={{
                     textAlign: "center",
                     color: "#f5f5f5",
-                    margin: "30px 0 20px 0",
+                    margin: "30px 0 10px 0",
                     fontSize: "1.5rem",
                     borderBottom: "2px solid #d4b85e",
                     display: "inline-block",
@@ -331,7 +342,10 @@ function PDFQuotation({
                 {quotationTitle}
             </h2>
 
-            {/* Main Products Table */}
+
+
+
+            {/* Products Table */}
             <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "25px", fontSize: "0.9rem" }}>
                 <thead>
                 <tr style={{ backgroundColor: "#333", color: "#d4b85e" }}>
@@ -345,18 +359,10 @@ function PDFQuotation({
                 </thead>
                 <tbody>
                 {cartItems.map((item, idx) => (
-                    <tr
-                        key={item.key}
-                        style={{
-                            background: idx % 2 === 0 ? "#1f1f1f" : "#2a2a2a",
-                            pageBreakInside: "avoid",
-                        }}
-                    >
+                    <tr key={item.key} style={{ background: idx % 2 === 0 ? "#1f1f1f" : "#2a2a2a" }}>
                         <td style={bodyCell}>{item.sNo}</td>
                         <td style={bodyCell}>{item.name}</td>
-                        <td style={{ ...bodyCell, fontSize: "0.8rem", whiteSpace: "pre-line" }}>
-                            {item.description}
-                        </td>
+                        <td style={{ ...bodyCell, fontSize: "0.8rem", whiteSpace: "pre-line" }}>{item.description}</td>
                         <td style={bodyCell}>{Math.round(item.price)}</td>
                         <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
                         <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
@@ -366,27 +372,20 @@ function PDFQuotation({
             </table>
 
             {/* Totals */}
-            <div style={{ textAlign: "right", marginTop: "30px", fontSize: "1rem", lineHeight: "1.8", color: "#eee" }}>
+            <div style={{ textAlign: "right", marginTop: "30px", fontSize: "1rem", lineHeight: "1.8" }}>
                 <p>All Products Subtotal: ₹{productsSubtotal.toFixed(2)}</p>
                 <p>Discount ({discount}%): -₹{discountAmount.toFixed(2)}</p>
                 <p>Subtotal After Discount: ₹{(productsSubtotal - discountAmount).toFixed(2)}</p>
             </div>
 
-            {/* Kordz Table (No Header) */}
+            {/* Kordz Item */}
             {kordzItem && (
                 <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px", fontSize: "0.9rem" }}>
                     <tbody>
-                    <tr
-                        style={{
-                            background: (cartItems.length % 2 === 0) ? "#1f1f1f" : "#2a2a2a",
-                            pageBreakInside: "avoid",
-                        }}
-                    >
+                    <tr style={{ background: (cartItems.length % 2 === 0) ? "#1f1f1f" : "#2a2a2a" }}>
                         <td style={bodyCell}>{kordzItem.sNo}</td>
                         <td style={bodyCell}>{kordzItem.name}</td>
-                        <td style={{ ...bodyCell, fontSize: "0.8rem", whiteSpace: "pre-line" }}>
-                            {kordzItem.description}
-                        </td>
+                        <td style={{ ...bodyCell, fontSize: "0.8rem", whiteSpace: "pre-line" }}>{kordzItem.description}</td>
                         <td style={bodyCell}>{Math.round(kordzItem.price)}</td>
                         <td style={{ ...bodyCell, textAlign: "center" }}>{kordzItem.quantity}</td>
                         <td style={bodyCell}>{Math.round(kordzItem.totalPrice)}</td>
@@ -396,22 +395,12 @@ function PDFQuotation({
             )}
 
             {/* Final Total */}
-            <div style={{ textAlign: "right", marginTop: "20px", fontSize: "1rem", lineHeight: "1.8", color: "#eee" }}>
-                <p style={{ fontWeight: "bold", fontSize: "1.2rem", color: "#d4b85e" }}>
-                    Final Amount: ₹{finalTotal.toFixed(2)}
-                </p>
+            <div style={{ textAlign: "right", marginTop: "20px", fontSize: "1.2rem", fontWeight: "bold", color: "#d4b85e" }}>
+                Final Amount: ₹{finalTotal.toFixed(2)}
             </div>
 
             <hr style={{ margin: "30px 0", borderTop: "1px dashed #555" }} />
-            <p
-                style={{
-                    textAlign: "center",
-                    fontStyle: "italic",
-                    color: "#888",
-                    marginTop: "20px",
-                    fontSize: "0.95rem",
-                }}
-            >
+            <p style={{ textAlign: "center", fontStyle: "italic", color: "#888", marginTop: "20px" }}>
                 Thank you for your business! We look forward to serving you again.
             </p>
         </div>
