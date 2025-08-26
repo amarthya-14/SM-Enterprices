@@ -8,11 +8,33 @@
         break-inside: avoid;
     }
 
-    table, tr, td, th {
-        page-break-inside: avoid !important;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px; /* ✅ uniform table text size */
+        page-break-inside: auto;
     }
 
-    div, p {
+    thead, tfoot {
+        display: table-row-group; /* ✅ prevent header repeating */
+    }
+
+    tr {
         page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    td, th {
+        border: 1px solid #ccc;
+        padding: 6px;
+        text-align: center;
+        white-space: pre-wrap;   /* ✅ preserve line breaks */
+        word-wrap: break-word;   /* ✅ wrap long words */
+        font-size: 12px;
+        font-weight: bold;       /* ✅ all table content bold */
+    }
+
+    th {
+        font-size: 13px;         /* ✅ slightly larger for headers */
     }
 }
