@@ -83,11 +83,11 @@ export default function Create() {
             total += totalPrice;
             return `
             <tr>
-                <td style="padding: 8px; text-align: center; vertical-align: middle;">${i + 1}</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle;">${type.charAt(0).toUpperCase() + type.slice(1)} Acoustics</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle;">${sft}</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle;">${price}</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle;">${totalPrice.toFixed(2)}</td>
+                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${i + 1}</td>
+                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${type.charAt(0).toUpperCase() + type.slice(1)} Acoustics</td>
+                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${sft}</td>
+                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${price}</td>
+                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${totalPrice.toFixed(2)}</td>
             </tr>
         `;
         });
@@ -120,11 +120,11 @@ export default function Create() {
             <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #eee;">
                 <thead>
                     <tr>
-                        <th style="padding: 8px; text-align: center; color: #d4b85e;">S.No</th>
-                        <th style="padding: 8px; text-align: center; color: #d4b85e;">Description</th>
-                        <th style="padding: 8px; text-align: center; color: #d4b85e;">SFT</th>
-                        <th style="padding: 8px; text-align: center; color: #d4b85e;">Price</th>
-                        <th style="padding: 8px; text-align: center; color: #d4b85e;">Total Price</th>
+                        <th style="padding: 8px; text-align: center; color: #d4b85e; font-weight: bold;">S.No</th>
+                        <th style="padding: 8px; text-align: center; color: #d4b85e; font-weight: bold;">Description</th>
+                        <th style="padding: 8px; text-align: center; color: #d4b85e; font-weight: bold;">SFT</th>
+                        <th style="padding: 8px; text-align: center; color: #d4b85e; font-weight: bold;">Price</th>
+                        <th style="padding: 8px; text-align: center; color: #d4b85e; font-weight: bold;">Total Price</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -145,6 +145,7 @@ export default function Create() {
             jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
         }).save();
     }
+
 
     return (
         <>
