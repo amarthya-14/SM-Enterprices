@@ -1,0 +1,18 @@
+@media print {
+    .page-break {
+        page-break-before: always;
+    }
+
+    .avoid-break {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    table, tr, td, th {
+        page-break-inside: avoid !important;
+    }
+
+    div, p {
+        page-break-inside: avoid;
+    }
+}
