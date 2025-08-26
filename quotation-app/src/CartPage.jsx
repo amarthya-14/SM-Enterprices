@@ -2,6 +2,7 @@ import { useContext, useState, useRef } from "react";
 import html2pdf from "html2pdf.js";
 import { useNavigate } from "react-router-dom";
 import { CartContext } from "./CartContext";
+import "./quotation.css";
 
 export default function CartPage() {
     const { cart = {}, allProducts = {}, incrementItem, decrementItem } = useContext(CartContext) || {};
@@ -10,7 +11,7 @@ export default function CartPage() {
 
     const [discount, setDiscount] = useState(0);
     const [quotationTitle, setQuotationTitle] = useState("Quotation for Home Theatre 7.1.4");
-    const [customerName, setCustomerName] = useState(""); // ✅ Customer name state
+    const [customerName, setCustomerName] = useState("");
     const [includeKordz, setIncludeKordz] = useState(false);
     const [kordzPrice, setKordzPrice] = useState("");
     const [includePowerAmp, setIncludePowerAmp] = useState(false);
@@ -53,7 +54,7 @@ export default function CartPage() {
             sNo: cartItems.length + 1,
             name: "Kordz-Cables and Accessories",
             description:
-                "Kordz 4K Supported HDMI cable (10 mtrs.), Kordz 16Gauge Speaker cable, Subwoofer Cable, Universal projector ceiling mount bracket, UPS, Stabilizer, Apple TV",
+                "Kordz 4K Supported HDMI cable (10 mtrs.)\nKordz 16Gauge Speaker cable\nSubwoofer Cable\nUniversal projector ceiling mount bracket\nUPS\nStabilizer\nApple TV",
             price: parseFloat(kordzPrice),
             quantity: 1,
             totalPrice: parseFloat(kordzPrice),
@@ -73,20 +74,17 @@ export default function CartPage() {
 
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            // ✅ Add customer name in filename (sanitize spaces)
-            const safeCustomerName = customerName ? customerName.replace(/\s+/g, "_") : "customer";
-
             html2pdf()
                 .from(componentRef.current)
                 .set({
                     filename: `${customerName || "untitled"}-quotation.pdf`,
-                    margin: 10,
+                    margin: [15, 10, 15, 10], // Increased top/bottom margins
                     image: { type: "jpeg", quality: 0.98 },
-                    html2canvas: { scale: 2 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+                    pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".avoid-break", ".totals-section", ".table-row"] } // Added .table-row
                 })
                 .save();
-
         } catch (error) {
             console.error("PDF generation failed:", error);
         }
@@ -129,7 +127,6 @@ export default function CartPage() {
                     </div>
                 ))}
 
-                {/* Discount input */}
                 <div style={{ marginTop: "20px" }}>
                     <label style={{ marginRight: "10px" }}>Discount (%):</label>
                     <input
@@ -146,7 +143,6 @@ export default function CartPage() {
                     />
                 </div>
 
-                {/* Quotation Title input */}
                 <div style={{ marginTop: "15px" }}>
                     <label style={{ marginRight: "10px" }}>Quotation Title:</label>
                     <input
@@ -163,7 +159,6 @@ export default function CartPage() {
                     />
                 </div>
 
-                {/* ✅ Customer Name input */}
                 <div style={{ marginTop: "15px" }}>
                     <label style={{ marginRight: "10px" }}>Customer Name:</label>
                     <input
@@ -181,7 +176,6 @@ export default function CartPage() {
                     />
                 </div>
 
-                {/* Kordz toggle */}
                 <div style={{ marginTop: "15px" }}>
                     <label>
                         <input
@@ -215,7 +209,6 @@ export default function CartPage() {
                     )}
                 </div>
 
-                {/* Power Amp toggle */}
                 <div style={{ marginTop: "15px" }}>
                     <label>
                         <input
@@ -257,7 +250,6 @@ export default function CartPage() {
                 </button>
             </div>
 
-            {/* PDF Rendering Block */}
             <div style={{ display: "none" }}>
                 <PDFQuotation
                     componentRef={componentRef}
@@ -269,7 +261,7 @@ export default function CartPage() {
                     kordzTotal={kordzTotal}
                     finalTotal={finalTotal}
                     quotationTitle={quotationTitle}
-                    customerName={customerName}   // ✅ Pass to PDF
+                    customerName={customerName}
                 />
             </div>
         </>
@@ -286,8 +278,14 @@ function PDFQuotation({
                           kordzTotal,
                           finalTotal,
                           quotationTitle,
-                          customerName,   // ✅ Added
+                          customerName,
                       }) {
+    const renderDescription = (description) => {
+        return description.split("\n").map((line, index) => (
+            <p key={index} style={{ margin: "2px 0" }}>{line}</p>
+        ));
+    };
+
     return (
         <div
             ref={componentRef}
@@ -301,16 +299,13 @@ function PDFQuotation({
                 borderRadius: "10px",
             }}
         >
-            {/* Header */}
             <div style={{ textAlign: "center", marginBottom: "25px" }}>
                 <h1 style={{ margin: "0 0 10px 0", fontSize: "2.5rem", color: "#d4b85e" }}>
                     SM Enterprises
                 </h1>
-                <p style={{ color: "#ccc", marginBottom: 0 }}>
+                <p style={{ color: "#ccc", marginBottom: 0, whiteSpace: "pre-line" }}>
                     D no:6/544, Jeenigala Street, Opp: Ramana Reddy Lorry Transport,
-                    <br />
                     StonehousePet, Nellore-524002.
-                    <br />
                     SPSR Nellore Dist, ContactNo: 9848430077, 9908024119
                 </p>
                 <p style={{ fontSize: "0.95rem", textAlign: "right", color: "#bbb" }}>
@@ -322,7 +317,6 @@ function PDFQuotation({
                 </p>
             </div>
 
-            {/* Title + Customer */}
             {customerName && (
                 <p style={{ textAlign: "left", fontSize: "1rem", color: "#ddd", marginTop: "10px", marginLeft: "20px" }}>
                     Client: <span style={{ fontWeight: "600", color: "#fff" }}>{customerName}</span>
@@ -342,11 +336,15 @@ function PDFQuotation({
                 {quotationTitle}
             </h2>
 
-
-
-
-            {/* Products Table */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "25px", fontSize: "0.9rem" }}>
+            <table
+                style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    marginTop: "25px",
+                    fontSize: "0.9rem",
+                }}
+                className="avoid-break"
+            >
                 <thead>
                 <tr style={{ backgroundColor: "#333", color: "#d4b85e" }}>
                     <th style={headerCell}>S.No</th>
@@ -359,10 +357,12 @@ function PDFQuotation({
                 </thead>
                 <tbody>
                 {cartItems.map((item, idx) => (
-                    <tr key={item.key} style={{ background: idx % 2 === 0 ? "#1f1f1f" : "#2a2a2a" }}>
+                    <tr key={item.key} className="table-row" style={{ background: idx % 2 === 0 ? "#1f1f1f" : "#2a2a2a" }}>
                         <td style={bodyCell}>{item.sNo}</td>
                         <td style={bodyCell}>{item.name}</td>
-                        <td style={{ ...bodyCell, fontSize: "0.8rem", whiteSpace: "pre-line" }}>{item.description}</td>
+                        <td style={{ ...bodyCell, fontSize: "0.8rem" }}>
+                            {renderDescription(item.description)}
+                        </td>
                         <td style={bodyCell}>{Math.round(item.price)}</td>
                         <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
                         <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
@@ -371,21 +371,26 @@ function PDFQuotation({
                 </tbody>
             </table>
 
-            {/* Totals */}
-            <div style={{ textAlign: "right", marginTop: "30px", fontSize: "1rem", lineHeight: "1.8" }}>
+            <div className="page-break"></div>
+
+            <div className="totals-section avoid-break" style={{ textAlign: "right", marginTop: "30px", fontSize: "1rem", lineHeight: "1.8" }}>
                 <p>All Products Subtotal: ₹{productsSubtotal.toFixed(2)}</p>
                 <p>Discount ({discount}%): -₹{discountAmount.toFixed(2)}</p>
                 <p>Subtotal After Discount: ₹{(productsSubtotal - discountAmount).toFixed(2)}</p>
             </div>
 
-            {/* Kordz Item */}
             {kordzItem && (
-                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px", fontSize: "0.9rem" }}>
+                <table
+                    style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px", fontSize: "0.9rem" }}
+                    className="avoid-break"
+                >
                     <tbody>
-                    <tr style={{ background: (cartItems.length % 2 === 0) ? "#1f1f1f" : "#2a2a2a" }}>
+                    <tr className="table-row" style={{ background: (cartItems.length % 2 === 0) ? "#1f1f1f" : "#2a2a2a" }}>
                         <td style={bodyCell}>{kordzItem.sNo}</td>
                         <td style={bodyCell}>{kordzItem.name}</td>
-                        <td style={{ ...bodyCell, fontSize: "0.8rem", whiteSpace: "pre-line" }}>{kordzItem.description}</td>
+                        <td style={{ ...bodyCell, fontSize: "0.8rem" }}>
+                            {renderDescription(kordzItem.description)}
+                        </td>
                         <td style={bodyCell}>{Math.round(kordzItem.price)}</td>
                         <td style={{ ...bodyCell, textAlign: "center" }}>{kordzItem.quantity}</td>
                         <td style={bodyCell}>{Math.round(kordzItem.totalPrice)}</td>
@@ -394,8 +399,7 @@ function PDFQuotation({
                 </table>
             )}
 
-            {/* Final Total */}
-            <div style={{ textAlign: "right", marginTop: "20px", fontSize: "1.2rem", fontWeight: "bold", color: "#d4b85e" }}>
+            <div className="totals-section avoid-break" style={{ textAlign: "right", marginTop: "20px", fontSize: "1.2rem", fontWeight: "bold", color: "#d4b85e" }}>
                 Final Amount: ₹{finalTotal.toFixed(2)}
             </div>
 
