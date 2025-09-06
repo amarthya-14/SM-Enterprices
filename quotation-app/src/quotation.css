@@ -11,16 +11,21 @@
     table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 12px; /* ✅ uniform table text size */
-        page-break-inside: auto;
+        font-size: 12px; /* uniform table text size */
+        page-break-inside: auto; /* Allow table to break across pages between rows */
     }
 
-    thead, tfoot {
-        display: table-row-group; /* ✅ prevent header repeating */
+    thead {
+        display: table-header-group !important; /* Header repeats on each page */
+    }
+
+    tfoot {
+        display: table-footer-group !important; /* Keeps footer grouped */
     }
 
     tr {
-        page-break-inside: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
         page-break-after: auto;
     }
 
@@ -28,13 +33,15 @@
         border: 1px solid #ccc;
         padding: 6px;
         text-align: center;
-        white-space: pre-wrap;   /* ✅ preserve line breaks */
-        word-wrap: break-word;   /* ✅ wrap long words */
+        white-space: pre-wrap;   /* Preserve line breaks */
+        word-wrap: break-word;   /* Wrap long words */
         font-size: 12px;
-        font-weight: bold;       /* ✅ all table content bold */
+        font-weight: bold;
+        page-break-inside: avoid; /* Prevent splits within cells */
+        page-break-after: avoid;  /* Avoid breaks after cells */
     }
 
     th {
-        font-size: 13px;         /* ✅ slightly larger for headers */
+        font-size: 13px; /* Slightly larger for headers */
     }
 }
