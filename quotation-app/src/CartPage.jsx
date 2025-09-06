@@ -75,14 +75,14 @@ export default function CartPage() {
             await new Promise((resolve) => setTimeout(resolve, 500));
 
             html2pdf()
-                .from(componentRef.current)
+                .from(element)
                 .set({
                     filename: `${customerName || "untitled"}-quotation.pdf`,
-                    margin: [15, 10, 15, 10], // Increased top/bottom margins
+                    margin: [15, 10, 15, 10],
                     image: { type: "jpeg", quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                    html2canvas: { scale: 2, useCORS: true },
                     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-                    pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".avoid-break", ".totals-section", ".table-row"] } // Added .table-row
+                    pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.avoid-break'] } // Respect CSS, avoid row splits and marked sections
                 })
                 .save();
         } catch (error) {
@@ -286,6 +286,12 @@ function PDFQuotation({
         ));
     };
 
+    // Indian currency formatter
+    const formatter = new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+
     return (
         <div
             ref={componentRef}
@@ -322,67 +328,75 @@ function PDFQuotation({
                     Client: <span style={{ fontWeight: "600", color: "#fff" }}>{customerName}</span>
                 </p>
             )}
-            <h2
-                style={{
-                    textAlign: "center",
-                    color: "#f5f5f5",
-                    margin: "30px 0 10px 0",
-                    fontSize: "1.5rem",
-                    borderBottom: "2px solid #d4b85e",
-                    display: "inline-block",
-                    paddingBottom: "8px",
-                }}
-            >
-                {quotationTitle}
-            </h2>
 
-            <table
-                style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    marginTop: "25px",
-                    fontSize: "0.9rem",
-                }}
-                className="avoid-break"
-            >
-                <thead>
-                <tr style={{ backgroundColor: "#333", color: "#d4b85e" }}>
-                    <th style={headerCell}>S.No</th>
-                    <th style={headerCell}>Name</th>
-                    <th style={headerCell}>Description</th>
-                    <th style={headerCell}>Price (₹)</th>
-                    <th style={headerCell}>Qty</th>
-                    <th style={headerCell}>Total (₹)</th>
-                </tr>
-                </thead>
-                <tbody>
-                {cartItems.map((item, idx) => (
-                    <tr key={item.key} className="table-row" style={{ background: idx % 2 === 0 ? "#1f1f1f" : "#2a2a2a" }}>
-                        <td style={bodyCell}>{item.sNo}</td>
-                        <td style={bodyCell}>{item.name}</td>
-                        <td style={{ ...bodyCell, fontSize: "0.8rem" }}>
-                            {renderDescription(item.description)}
-                        </td>
-                        <td style={bodyCell}>{Math.round(item.price)}</td>
-                        <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
-                        <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
+            {/* Table wrapper without avoid-break */}
+            <div>
+                <h2
+                    style={{
+                        textAlign: "center",
+                        color: "#f5f5f5",
+                        margin: "30px 0 10px 0",
+                        fontSize: "1.5rem",
+                        borderBottom: "2px solid #d4b85e",
+                        paddingBottom: "8px",
+                    }}
+                >
+                    {quotationTitle}
+                </h2>
+
+                <table
+                    style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        marginTop: "25px",
+                        fontSize: "0.9rem",
+                    }}
+                >
+                    <thead>
+                    <tr style={{ backgroundColor: "#333", color: "#d4b85e" }}>
+                        <th style={headerCell}>S.No</th>
+                        <th style={headerCell}>Name</th>
+                        <th style={headerCell}>Description</th>
+                        <th style={headerCell}>Price (₹)</th>
+                        <th style={headerCell}>Qty</th>
+                        <th style={headerCell}>Total (₹)</th>
                     </tr>
-                ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {cartItems.map((item, idx) => (
+                        <tr
+                            key={item.key}
+                            className="table-row"
+                            style={{
+                                background: idx % 2 === 0 ? "#1f1f1f" : "#2a2a2a",
+                            }}
+                        >
+                            <td style={bodyCell}>{item.sNo}</td>
+                            <td style={bodyCell}>{item.name}</td>
+                            <td style={{ ...bodyCell, fontSize: "0.8rem" }}>
+                                {renderDescription(item.description)}
+                            </td>
+                            <td style={bodyCell}>{Math.round(item.price)}</td>
+                            <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
+                            <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
 
-            <div className="page-break"></div>
+            {/* Removed page-break div to keep content continuous */}
 
-            <div className="totals-section avoid-break" style={{ textAlign: "right", marginTop: "30px", fontSize: "1rem", lineHeight: "1.8" }}>
-                <p>All Products Subtotal: ₹{productsSubtotal.toFixed(2)}</p>
-                <p>Discount ({discount}%): -₹{discountAmount.toFixed(2)}</p>
-                <p>Subtotal After Discount: ₹{(productsSubtotal - discountAmount).toFixed(2)}</p>
+            <div className="avoid-break" style={{ textAlign: "right", marginTop: "30px", fontSize: "1rem", lineHeight: "1.8" }}>
+                <p>All Products Subtotal: ₹{formatter.format(productsSubtotal)}</p>
+                <p>Discount ({discount}%): -₹{formatter.format(discountAmount)}</p>
+                <p>Subtotal After Discount: ₹{formatter.format(productsSubtotal - discountAmount)}</p>
             </div>
 
             {kordzItem && (
                 <table
-                    style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px", fontSize: "0.9rem" }}
                     className="avoid-break"
+                    style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px", fontSize: "0.9rem" }}
                 >
                     <tbody>
                     <tr className="table-row" style={{ background: (cartItems.length % 2 === 0) ? "#1f1f1f" : "#2a2a2a" }}>
@@ -399,8 +413,8 @@ function PDFQuotation({
                 </table>
             )}
 
-            <div className="totals-section avoid-break" style={{ textAlign: "right", marginTop: "20px", fontSize: "1.2rem", fontWeight: "bold", color: "#d4b85e" }}>
-                Final Amount: ₹{finalTotal.toFixed(2)}
+            <div className="avoid-break" style={{ textAlign: "right", marginTop: "20px", fontSize: "1.2rem", fontWeight: "bold", color: "#d4b85e" }}>
+                Final Amount: ₹{formatter.format(finalTotal)}
             </div>
 
             <hr style={{ margin: "30px 0", borderTop: "1px dashed #555" }} />
@@ -422,4 +436,5 @@ const bodyCell = {
     padding: "8px",
     borderBottom: "1px solid #333",
     color: "#eee",
+    fontWeight: "600",
 };
