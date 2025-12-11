@@ -176,10 +176,10 @@ export default function Create() {
             padding-top: 10px;
             border-top: 2px solid #d4b85e;
             color: #ccc;
-            font-size: 0.475rem;  /* half of previous 0.95rem */
+            font-size: 0.475rem;  /* smaller font for list and note */
             line-height: 1.4;
         ">
-            <h3 style="color: #d4b85e; margin-bottom: 4px; font-size: 0.425rem;">Materials Used:</h3>
+            <h3 style="color: #d4b85e; margin-bottom: 4px; font-size: 0.85rem;">Materials Used:</h3> <!-- heading stays same -->
 
             <ul style="margin: 0; padding-left: 16px; font-size: 0.475rem;">
                 <li>19 MM plywood (Oswin, green ply, Sharon etc., as per customer requirement)</li>
@@ -193,10 +193,11 @@ export default function Create() {
                 <li>Foam, Cloth, Sunmica, Door Handles, Door Hinges, Door Locks, Door Closure</li>
             </ul>
 
-            <p style="margin-top: 10px; color: #bbb; font-size: 0.425rem;">
+            <p style="margin-top: 6px; color: #bbb; font-size: 0.425rem;">
                 *The above materials ensure maximum acoustic performance and premium finish.*
             </p>
         </div>
+
 
          `;
 
