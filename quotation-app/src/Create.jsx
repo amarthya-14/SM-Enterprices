@@ -135,6 +135,36 @@ export default function Create() {
                     </tr>
                 </tbody>
             </table>
+            <!-- FOOTER -->
+            <div style="
+                margin-top: 4px;
+                padding-top: 20px;
+                border-top: 2px solid #d4b85e;
+                color: #ccc;
+                font-size: 0.95rem;
+                line-height: 1.6;
+            ">
+
+                <h3 style="color: #d4b85e; margin-bottom: 8px;">Materials Used:</h3>
+
+                <ul style="margin: 0; padding-left: 18px;">
+                    <li>19 MM plywood (Oswin, green ply, Sharon etc., as per customer requirement)</li>
+                    <li>12 MM plywood</li>
+                    <li>8 MM plywood</li>
+                    <li>8 MM HDHMR Boards</li>
+                    <li>2*1 Aluminium Channels</li>
+                    <li>1000 GSM Recron</li>
+                    <li>18 MM Wood Wool Sheets</li>
+                    <li>Grippers</li>
+                    <li>Foam, Cloth, Sunmica, Door Handles, Door Hinges, Door Locks, Door Closure</li>
+
+                </ul>
+
+                <p style="margin-top: 20px; color: #bbb; font-size: 0.85rem;">
+                    *The above materials ensure maximum acoustic performance and premium finish.*
+                </p>
+            </div>
+
         </div>
     `;
 
