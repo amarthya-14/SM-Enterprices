@@ -98,100 +98,81 @@ export default function Create() {
             year: "numeric",
         });
 
-        const content = `
-            <style>
-                @media print and (max-width: 600px) {
-                    .container { padding: 10px !important; font-size: 0.9em !important; }
-                    .header h1 { font-size: 1.5rem !important; }
-                    .header p { font-size: 0.8rem !important; line-height: 1.4 !important; }
-                    .date { font-size: 0.75rem !important; }
-                    .title { font-size: 1rem !important; margin-bottom: 10px !important; }
-                    table { font-size: 10px !important; }
-                    th, td { padding: 4px 2px !important; }
-                    .total-row, .total-value { font-size: 12px !important; padding: 6px !important; }
-                    .footer { font-size: 0.75rem !important; padding-top: 10px !important; }
-                    .footer h3 { font-size: 0.9rem !important; }
-                    .footer ul { padding-left: 12px !important; }
-                    .footer li { font-size: 0.75rem !important; margin-bottom: 2px !important; }
-                    .note { font-size: 0.7rem !important; margin-top: 10px !important; }
-                    .divider { width: 50px !important; }
-                }
-            </style>
-            <div class="container" style="padding: 15px; font-family: 'Poppins', sans-serif; background-color: #121212; color: #eee; max-width: 900px; margin: 0 auto; border-radius: 10px; box-sizing: border-box;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h1 style="margin: 0 0 8px 0; font-size: 1.8rem; color: #d4b85e; font-family: 'Playfair Display', serif; font-weight: 700; line-height: 1.2;">
-                        SM Enterprises
-                    </h1>
-                    <p style="margin: 8px 0; font-size: 0.9rem; line-height: 1.5; color: #ccc;">
-                        D no:6/544, Jeenigala Street, Opp: Ramana Reddy Lorry Transport,<br />
-                        StonehousePet, Nellore-524002.<br />
-                        SPSR Nellore Dist, ContactNo: 9848430077, 9908024119
-                    </p>
-                    <div style="height: 3px; width: 60px; background-color: #d4b85e; margin: 12px auto 0; border-radius: 2px;" class="divider"></div>
-                    <p style="margin: 8px 0 0 0; font-size: 0.85rem; text-align: right; color: #bbb;" class="date">
-                        Date: ${dateStr}
-                    </p>
-                </div>
+       const content = `
+       <div style="
+           width: 795px;
+           max-width: 100%;
+           margin: 0 auto;
+           font-family: 'Poppins', sans-serif;
+           background-color: #121212;
+           color: #eee;
+           padding: 15px;
+           box-sizing: border-box;
+           transform: scale(0.85); /* scales everything down for mobile */
+           transform-origin: top left;
+       ">
+           <div style="text-align: center; margin-bottom: 20px;">
+               <h1 style="font-size: 1.6rem; color: #d4b85e;">SM Enterprises</h1>
+               <p style="font-size: 0.8rem; line-height: 1.4; color: #ccc;">
+                   D no:6/544, Jeenigala Street, Opp: Ramana Reddy Lorry Transport,<br/>
+                   StonehousePet, Nellore-524002.<br/>
+                   SPSR Nellore Dist, ContactNo: 9848430077, 9908024119
+               </p>
+               <div style="height: 3px; width: 60px; background-color: #d4b85e; margin: 12px auto 0; border-radius: 2px;"></div>
+               <p style="font-size: 0.7rem; text-align: right; color: #bbb;">
+                   Date: ${dateStr}
+               </p>
+           </div>
 
-                <h2 style="text-align: left; color: #eee; margin-bottom: 15px; border-bottom: 2px solid #d4b85e; display: inline-block; padding-bottom: 4px; font-size: 1.2rem;" class="title">Acoustics Quotation</h2>
+          <h2 style="text-align: left; color: #eee; margin-bottom: 15px; border-bottom: 2px solid #d4b85e; display: inline-block; padding-bottom: 4px; font-size: 1.2rem;" class="title">Acoustics Quotation</h2>
 
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #eee; border: 1px solid #333;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 6px 4px; text-align: center; color: #d4b85e; font-weight: bold; background-color: #1a1a1a;">S.No</th>
-                            <th style="padding: 6px 4px; text-align: center; color: #d4b85e; font-weight: bold; background-color: #1a1a1a;">Description</th>
-                            <th style="padding: 6px 4px; text-align: center; color: #d4b85e; font-weight: bold; background-color: #1a1a1a;">SFT</th>
-                            <th style="padding: 6px 4px; text-align: center; color: #d4b85e; font-weight: bold; background-color: #1a1a1a;">Price</th>
-                            <th style="padding: 6px 4px; text-align: center; color: #d4b85e; font-weight: bold; background-color: #1a1a1a;">Total Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows.join("")}
-                        <tr>
-                            <td colspan="4" style="padding: 10px; text-align: right; color: #d4b85e; font-weight: 900; font-size: 14px; border-top: 2px solid #d4b85e; text-transform: uppercase; letter-spacing: 0.5px;" class="total-row">Final Amount:</td>
-                            <td style="padding: 10px; text-align: center; color: #d4b85e; font-weight: 900; font-size: 14px; border-top: 2px solid #d4b85e;" class="total-value">₹ ${total.toLocaleString("en-IN")}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <!-- FOOTER -->
-                <div style="
-                            margin-top: 4px;
-                            padding-top: 18px;
+           <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #eee; border: 1px solid #333;">
+               <thead>
+                   <tr>
+                       <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">S.No</th>
+                       <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">Description</th>
+                       <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">SFT</th>
+                       <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">Price</th>
+                       <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">Total Price</th>
+                   </tr>
+               </thead>
+               <tbody>
+                   ${rows.join("")}
+                   <tr>
+                       <td colspan="4" style="padding: 10px; text-align: right; font-weight: 900; font-size: 14px; border-top: 2px solid #d4b85e;">Final Amount:</td>
+                       <td style="padding: 10px; text-align: center; font-weight: 900; font-size: 14px; border-top: 2px solid #d4b85e;">₹ ${total.toLocaleString("en-IN")}</td>
+                   </tr>
+               </tbody>
+           </table>
 
-                            color: #ccc;
-                            font-size: 0.95rem;
-                            line-height: 1.6;
-                        ">
+           <div style="margin-top: 10px; padding-top: 15px; color: #ccc; font-size: 0.75rem; line-height: 1.4;">
+               <h3 style="color: #d4b85e; font-size: 0.85rem; margin-bottom: 6px;">Materials Used:</h3>
+               <ul style="padding-left: 16px; margin: 0;">
+                   <li>19 MM plywood (Oswin, green ply, Sharon etc., as per customer requirement)</li>
+                   <li>12 MM plywood</li>
+                   <li>8 MM plywood</li>
+                   <li>8 MM HDHMR Boards</li>
+                   <li>2*1 Aluminium Channels</li>
+                   <li>1000 GSM Recron</li>
+                   <li>18 MM Wood Wool Sheets</li>
+                   <li>Grippers</li>
+                   <li>Foam, Cloth, Sunmica, Door Handles, Door Hinges, Door Locks, Door Closure</li>
+               </ul>
+               <p style="margin-top: 10px; color: #bbb; font-size: 0.7rem;">
+                   *The above materials ensure maximum acoustic performance and premium finish.*
+               </p>
+           </div>
+       </div>
+       `;
 
-                    <h3 style="color: #d4b85e; margin-bottom: 8px;">Materials Used:</h3>
 
-                                <ul style="margin: 0; padding-left: 18px;">
-                                    <li>19 MM plywood (Oswin, green ply, Sharon etc., as per customer requirement)</li>
-                                    <li>12 MM plywood</li>
-                                    <li>8 MM plywood</li>
-                                    <li>8 MM HDHMR Boards</li>
-                                    <li>2*1 Aluminium Channels</li>
-                                    <li>1000 GSM Recron</li>
-                                    <li>18 MM Wood Wool Sheets</li>
-                                    <li>Grippers</li>
-                                    <li>Foam, Cloth, Sunmica, Door Handles, Door Hinges, Door Locks, Door Closure</li>
+       html2pdf().from(content).set({
+           margin: 0.5,
+           filename: "acoustics-quotation.pdf",
+           html2canvas: { scale: 2 },
+           jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+       }).save();
 
-                                </ul>
-
-                                <p style="margin-top: 20px; color: #bbb; font-size: 0.85rem;">
-                                    *The above materials ensure maximum acoustic performance and premium finish.*
-                                </p>
-                </div>
-
-            </div>
-        `;
-
-        html2pdf().from(content).set({
-            margin: 0.5,
-            filename: "acoustics-quotation.pdf",
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-        }).save();
     }
 
 
