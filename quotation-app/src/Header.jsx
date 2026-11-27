@@ -17,7 +17,7 @@ export default function Header() {
                     </span>
                 </Link>
                 <nav className="nav" aria-label="Main">
-                    <NavLink to="/" end className="nav-link">Catalogue</NavLink>
+                    <NavLink to="/" end className="nav-link nav-catalogue">Catalogue</NavLink>
                     <NavLink to="/cart" className="nav-link">
                         Quotation
                         {count > 0 && <span className="badge" aria-label={`${count} items`}>{count}</span>}

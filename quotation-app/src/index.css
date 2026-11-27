@@ -817,7 +817,7 @@ body {
 
 @media (max-width: 520px) {
   .brand-sub { display: none; }
-  .nav-link[href="/"] { display: none; } /* the logo already leads to the catalogue */
+  .nav-catalogue { display: none; } /* the logo already leads to the catalogue */
 }
 
 @media (max-width: 380px) {

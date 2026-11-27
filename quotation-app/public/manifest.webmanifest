@@ -1,7 +1,9 @@
 {
   "name": "SM Enterprises · Quotation Studio",
   "short_name": "SM Quotes",
-  "start_url": "/",
+  "start_url": "/studio/",
+  "scope": "/studio/",
+  "id": "/studio/",
   "display": "standalone",
   "background_color": "#0b0a08",
   "theme_color": "#0b0a08",

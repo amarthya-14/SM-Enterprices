@@ -1,4 +1,5 @@
-// SM Enterprises showcase: WhatsApp links, scroll reveals, and the speaker-layout planner.
+// SM Enterprises showcase: the opening, WhatsApp links, scroll reveals, and the speaker-layout planner.
+import { playIntroSound, LOGO_AT } from "./sound.js";
 
 const WHATSAPP = "919848430077"; // the business WhatsApp number (98484 30077)
 
@@ -10,6 +11,56 @@ document.querySelectorAll("[data-wa]").forEach((a) => {
 });
 
 document.getElementById("year").textContent = new Date().getFullYear();
+
+// ---------- Opening: tap to enter, projector on, logo on the screen ----------
+// Plays once per visit. Skipped for people who prefer reduced motion, and when a link opens a
+// section directly (#packages ...). Add ?intro to the address to see it again.
+(function opening() {
+  const intro = document.getElementById("intro");
+  const SEEN = "sm_intro_seen";
+  let seen = false;
+  try { seen = sessionStorage.getItem(SEEN) === "1"; } catch { /* storage blocked: just play */ }
+  const forced = new URLSearchParams(location.search).has("intro");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!intro || reduce || (!forced && (seen || location.hash))) return;
+
+  const root = document.documentElement;
+  intro.hidden = false;
+  root.classList.add("intro-open");
+  intro.style.setProperty("--logo-at", `${LOGO_AT}s`);
+  const play = document.getElementById("intro-play");
+  const skip = document.getElementById("intro-skip");
+  play.focus({ preventScroll: true });
+
+  let stopSound = null;
+  let timer = null;
+  let finished = false;
+
+  function finish() {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    try { sessionStorage.setItem(SEEN, "1"); } catch { /* fine */ }
+    intro.classList.add("is-done");
+    root.classList.remove("intro-open");
+    window.scrollTo(0, 0);
+    setTimeout(() => intro.remove(), 1200);
+    document.removeEventListener("keydown", onKey);
+  }
+
+  function onKey(e) {
+    if (e.key === "Escape") { stopSound?.(); finish(); }
+  }
+
+  play.addEventListener("click", () => {
+    if (intro.classList.contains("is-playing")) return;
+    intro.classList.add("is-playing");
+    try { stopSound = playIntroSound(); } catch { stopSound = null; }
+    timer = setTimeout(finish, (LOGO_AT + 3.9) * 1000);
+  });
+  skip.addEventListener("click", () => { stopSound?.(); finish(); });
+  document.addEventListener("keydown", onKey);
+})();
 
 // ---------- Nav background once the page scrolls ----------
 const nav = document.querySelector(".nav");

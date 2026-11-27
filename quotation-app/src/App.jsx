@@ -10,7 +10,7 @@ export default function App() {
     return (
         <Lock>
         <CartProvider>
-            <Router>
+            <Router basename="/studio">
                 <Header />
                 <main className="page">
                     <Routes>
