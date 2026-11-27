@@ -171,7 +171,7 @@ function groupItems(items) {
 
 function GroupRow({ title, cols }) {
     return (
-        <tr style={{ pageBreakInside: "avoid", pageBreakAfter: "avoid" }}>
+        <tr>
             <td colSpan={cols} style={{ padding: "9px 8px 5px", borderBottom: `1px solid ${HAIR}` }}>
                 <span style={{ fontFamily: ROMAN, fontSize: "11.5px", fontWeight: 700, letterSpacing: "2px", color: GOLD }}>{title.toUpperCase()}</span>
             </td>
@@ -181,7 +181,7 @@ function GroupRow({ title, cols }) {
 
 function ItemRow({ n, item }) {
     return (
-        <tr style={{ pageBreakInside: "avoid" }}>
+        <tr>
             <td style={{ ...td, color: GOLD, fontWeight: 700 }}>{serial(n)}</td>
             <td style={{ ...td, fontWeight: 700 }}>{(item.name || "").trim()}</td>
             <td style={{ ...td, fontSize: "11.5px", fontWeight: 500, color: BODY, lineHeight: 1.45 }}>
@@ -204,6 +204,42 @@ const COLS = (
         <col style={{ width: "14%" }} />
     </colgroup>
 );
+
+const ACOUSTIC_COLS = (
+    <colgroup>
+        <col style={{ width: "6%" }} />
+        <col style={{ width: "20%" }} />
+        <col />
+        <col style={{ width: "11%" }} />
+        <col style={{ width: "11%" }} />
+        <col style={{ width: "15%" }} />
+    </colgroup>
+);
+
+// html2pdf cuts the page wherever it falls, and it cannot move a single <tr> of a big table
+// to the next page. So every row is its own little table inside an "avoid-break" block,
+// which html2pdf pushes whole onto the next page instead of slicing through it.
+function Block({ cols = COLS, children }) {
+    return (
+        <div className="avoid-break">
+            <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                {cols}
+                <tbody>{children}</tbody>
+            </table>
+        </div>
+    );
+}
+
+// A group heading always travels with its first item, so a heading is never left alone at the bottom of a page.
+function ItemGroups({ groups, start = 0 }) {
+    let n = start;
+    return groups.map((g, gi) => g.items.map((item, i) => (
+        <Block key={item.key ?? `${gi}-${i}`}>
+            {i === 0 && g.title ? <GroupRow title={g.title} cols={6} /> : null}
+            <ItemRow n={++n} item={item} />
+        </Block>
+    )));
+}
 
 function HeadRow() {
     return (
@@ -286,7 +322,7 @@ export function QuotationPDF({
     subtotalAfterDiscount, finalTotal, quotationTitle, customerName,
 }) {
     const groups = groupItems(baseCartItems);
-    let n = 0;
+    const itemCount = baseCartItems.length;
     const totals = [{ label: "Equipment subtotal", value: `₹ ${rupees(productsSubtotal)}` }];
     if (discount !== 0) {
         totals.push({ label: `Discount (${discount}%)`, value: `− ₹ ${rupees(discountAmount)}` });
@@ -302,24 +338,15 @@ export function QuotationPDF({
             <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
                 {COLS}
                 <thead><HeadRow /></thead>
-                <tbody>
-                    {groups.map((g) => [
-                        g.title ? <GroupRow key={`g-${g.title}`} title={g.title} cols={6} /> : null,
-                        ...g.items.map((item) => <ItemRow key={item.key} n={++n} item={item} />),
-                    ])}
-                </tbody>
             </table>
+            <ItemGroups groups={groups} />
 
             <Totals rows={totals} />
 
             {postDiscountItems.length > 0 && (
-                <table className="avoid-break" style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", marginTop: "12px" }}>
-                    {COLS}
-                    <tbody>
-                        <GroupRow title="Additional Items" cols={6} />
-                        {postDiscountItems.map((item) => <ItemRow key={item.key} n={++n} item={item} />)}
-                    </tbody>
-                </table>
+                <div style={{ marginTop: "12px" }}>
+                    <ItemGroups groups={[{ title: "Additional Items", items: postDiscountItems }]} start={itemCount} />
+                </div>
             )}
 
             <FinalAmount amount={finalTotal} />
@@ -339,29 +366,30 @@ export function AcousticsPDF({ componentRef, meta, rows, total, customerName }) 
             <Title>Acoustics Quotation</Title>
 
             <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                {ACOUSTIC_COLS}
                 <thead>
                     <tr>
-                        <th style={{ ...th, width: "6%" }}>No</th>
-                        <th style={{ ...th, width: "20%" }}>Treatment</th>
+                        <th style={th}>No</th>
+                        <th style={th}>Treatment</th>
                         <th style={th}>Specifications</th>
-                        <th style={{ ...th, ...right, width: "11%" }}>Area (SFT)</th>
-                        <th style={{ ...th, ...right, width: "11%" }}>Rate (₹)</th>
-                        <th style={{ ...th, ...right, width: "15%" }}>Amount (₹)</th>
+                        <th style={{ ...th, ...right }}>Area (SFT)</th>
+                        <th style={{ ...th, ...right }}>Rate (₹)</th>
+                        <th style={{ ...th, ...right }}>Amount (₹)</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {rows.map((r, i) => (
-                        <tr key={r.type}>
-                            <td style={{ ...td, color: GOLD, fontWeight: 700 }}>{serial(i + 1)}</td>
-                            <td style={{ ...td, fontWeight: 700 }}>{r.label}</td>
-                            <td style={{ ...td, fontSize: "11.5px", fontWeight: 500, color: BODY, lineHeight: 1.45 }}>{ACOUSTIC_SPECS[r.type]}</td>
-                            <td style={{ ...td, ...right }}>{plain(r.sft)}</td>
-                            <td style={{ ...td, ...right }}>{plain(r.rate)}</td>
-                            <td style={{ ...td, ...right, fontWeight: 700 }}>{rupees(r.amount)}</td>
-                        </tr>
-                    ))}
-                </tbody>
             </table>
+            {rows.map((r, i) => (
+                <Block key={r.type} cols={ACOUSTIC_COLS}>
+                    <tr>
+                        <td style={{ ...td, color: GOLD, fontWeight: 700 }}>{serial(i + 1)}</td>
+                        <td style={{ ...td, fontWeight: 700 }}>{r.label}</td>
+                        <td style={{ ...td, fontSize: "11.5px", fontWeight: 500, color: BODY, lineHeight: 1.45 }}>{ACOUSTIC_SPECS[r.type]}</td>
+                        <td style={{ ...td, ...right }}>{plain(r.sft)}</td>
+                        <td style={{ ...td, ...right }}>{plain(r.rate)}</td>
+                        <td style={{ ...td, ...right, fontWeight: 700 }}>{rupees(r.amount)}</td>
+                    </tr>
+                </Block>
+            ))}
 
             <FinalAmount amount={total} />
 

@@ -78,12 +78,46 @@ export const ACOUSTIC_SPECS = {
     flooring: "14 mm flooring carpet with 1800 GSM pile weight",
 };
 
+const MARGIN = [12, 10, 14, 10]; // mm: top, left, bottom, right
+const SCALE = 2;
+
+/*
+ * Keeps every ".avoid-break" block (an item row, the totals, the final amount...) whole on one page.
+ *
+ * html2pdf draws the quotation as one tall picture and slices it into A4 pages, wherever the cut falls.
+ * Its own "avoid" option measures the live page, but the picture is drawn from a cloned copy whose
+ * text wraps slightly differently, so its guesses drift and rows got sliced in half. This runs on the
+ * clone itself, right before it is drawn: any block that would cross a cut gets a spacer in front of it,
+ * which pushes it to the top of the next page.
+ */
+function keepBlocksWhole(doc) {
+    const root = doc.querySelector(".html2pdf__container");
+    if (!root) return;
+    const innerW = 210 - MARGIN[1] - MARGIN[3];
+    const innerH = 297 - MARGIN[0] - MARGIN[2];
+    const width = root.getBoundingClientRect().width;
+    const pageH = Math.floor(width * SCALE * (innerH / innerW)) / SCALE; // the same cut html2pdf makes
+    root.querySelectorAll(".avoid-break").forEach((el) => {
+        if (el.parentElement.closest(".avoid-break")) return; // only outermost blocks
+        const base = root.getBoundingClientRect().top;
+        const r = el.getBoundingClientRect();
+        const top = r.top - base;
+        const bottom = r.bottom - base;
+        if (r.height >= pageH) return; // taller than a page: nothing to do
+        if (Math.floor(top / pageH) !== Math.floor((bottom - 0.5) / pageH)) {
+            const spacer = doc.createElement("div");
+            spacer.style.height = `${pageH - (top % pageH) + 2}px`;
+            el.parentNode.insertBefore(spacer, el);
+        }
+    });
+}
+
 export const PDF_OPTIONS = {
-    margin: [12, 10, 14, 10],
+    margin: MARGIN,
     image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+    html2canvas: { scale: SCALE, useCORS: true, backgroundColor: "#ffffff", onclone: keepBlocksWhole },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".avoid-break"] },
+    pagebreak: { mode: [] }, // page breaks are handled by keepBlocksWhole
 };
 
 /**
