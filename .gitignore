@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets ###
+local.properties
+.env.local
+.vercel
+.DS_Store
