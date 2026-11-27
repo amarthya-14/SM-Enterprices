@@ -87,8 +87,8 @@ if ("IntersectionObserver" in window) {
 // ---------- Layout planner ----------
 // Top view, 600 x 460: screen along the top, seats in the middle. Positions follow Dolby's layouts.
 const LAYOUTS = {
-  classic: { code: "5.1.2", ear: 5, sub: 1, height: 2 },
-  reference: { code: "5.1.4", ear: 5, sub: 1, height: 4 },
+  classic: { code: "7.1.2", ear: 7, sub: 1, height: 2 },
+  reference: { code: "7.1.4", ear: 7, sub: 1, height: 4 },
   elite: { code: "7.2.4", ear: 7, sub: 2, height: 4 },
 };
 
@@ -113,14 +113,14 @@ const SPEAKERS = [
   { name: "Front right", kind: "ear", role: "front", pos: { classic: [430, 74], reference: [420, 62], elite: [420, 62] } },
   { name: "Surround left", kind: "ear", role: "side", pos: { classic: [58, 300], reference: [58, 290], elite: [58, 250] } },
   { name: "Surround right", kind: "ear", role: "side", pos: { classic: [542, 300], reference: [542, 290], elite: [542, 250] } },
-  { name: "Rear left", kind: "ear", role: "rear", pos: { elite: [200, 425] } },
-  { name: "Rear right", kind: "ear", role: "rear", pos: { elite: [400, 425] } },
+  { name: "Rear left", kind: "ear", role: "rear", pos: { classic: [215, 420], reference: [215, 425], elite: [200, 425] } },
+  { name: "Rear right", kind: "ear", role: "rear", pos: { classic: [385, 420], reference: [385, 425], elite: [400, 425] } },
   { name: "Ceiling left", kind: "height", role: "height", pos: { classic: [215, 240] } },
   { name: "Ceiling right", kind: "height", role: "height", pos: { classic: [385, 240] } },
   { name: "Ceiling front left", kind: "height", role: "height", pos: { reference: [215, 190], elite: [215, 175] } },
   { name: "Ceiling front right", kind: "height", role: "height", pos: { reference: [385, 190], elite: [385, 175] } },
-  { name: "Ceiling rear left", kind: "height", role: "height", pos: { reference: [215, 370], elite: [215, 380] } },
-  { name: "Ceiling rear right", kind: "height", role: "height", pos: { reference: [385, 370], elite: [385, 380] } },
+  { name: "Ceiling rear left", kind: "height", role: "height", pos: { reference: [215, 365], elite: [215, 380] } },
+  { name: "Ceiling rear right", kind: "height", role: "height", pos: { reference: [385, 365], elite: [385, 380] } },
   { name: "Subwoofer", kind: "sub", role: "sub", pos: { classic: [520, 84], reference: [520, 84], elite: [520, 84] } },
   { name: "Second subwoofer", kind: "sub", role: "sub", pos: { elite: [80, 84] } },
 ];

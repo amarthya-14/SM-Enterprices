@@ -1,9 +1,11 @@
 import Options from "./Options";
 import Stepper from "./Stepper";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import html2pdf from "html2pdf.js";
 import { CartContext } from "./CartContext";
 import { apiGet } from "./api";
+import { AcousticsPDF } from "./pdf";
+import { quoteMeta, PDF_OPTIONS } from "./pdfData";
 import { inr, titleCase } from "./format";
 
 const products = [
@@ -32,6 +34,10 @@ export default function Create() {
     const [query, setQuery] = useState("");
     const [expanded, setExpanded] = useState({});
     const [acousticsError, setAcousticsError] = useState(null);
+    const [acousticsCustomer, setAcousticsCustomer] = useState("");
+    const [acousticsMeta, setAcousticsMeta] = useState(() => quoteMeta());
+    const [acousticsBusy, setAcousticsBusy] = useState(false);
+    const acousticsRef = useRef();
 
     // Acoustics State
     const [acoustics, setAcoustics] = useState({
@@ -97,151 +103,27 @@ export default function Create() {
         }));
     }
 
-    function downloadAcousticsPDF() {
+    async function downloadAcousticsPDF() {
         const selected = Object.entries(acoustics).filter(([, data]) => data.checked);
         if (selected.length === 0) return setAcousticsError("Select at least one surface to quote.");
         const incomplete = selected.find(([, data]) => !(parseFloat(data.sft) > 0) || !(parseFloat(data.price) > 0));
         if (incomplete) return setAcousticsError(`Enter the area and rate for ${titleCase(incomplete[0])} Acoustics.`);
 
-        let total = 0;
-        const rows = selected.map(([type, data], i) => {
-            const { sft, price } = data;
-            const totalPrice = parseFloat(sft) * parseFloat(price);
-            total += totalPrice;
-            return `
-            <tr>
-                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${i + 1}</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${type.charAt(0).toUpperCase() + type.slice(1)} Acoustics</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${sft}</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${price}</td>
-                <td style="padding: 8px; text-align: center; vertical-align: middle; font-weight: bold;">${totalPrice.toFixed(2)}</td>
-            </tr>
-        `;
-        });
-
-        const dateStr = new Date().toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-        });
-
-      const content = `
-      <style>
-      @media screen and (max-width: 480px) {
-          h1 { font-size: 1.3rem !important; }
-          p { font-size: 0.7rem !important; line-height: 1.2 !important; }
-          .title { font-size: 1rem !important; margin-bottom: 10px !important; }
-          table { font-size: 10px !important; }
-          th, td { padding: 4px 2px !important; }
-          .total-row, .total-value { font-size: 12px !important; padding: 6px !important; }
-          .footer { font-size: 0.65rem !important; line-height: 1.2 !important; padding-top: 10px !important; }
-          .footer h3 { font-size: 0.75rem !important; margin-bottom: 4px; }
-          .footer li { font-size: 0.65rem !important; margin-bottom: 2px; }
-          .date { font-size: 0.65rem !important; text-align: right !important; }
-      }
-      </style>
-
-      <div style="
-          width: 795px;
-          max-width: 100%;
-          margin: 0 auto;
-          font-family: 'Poppins', sans-serif;
-          background-color: #ffffff;
-          color: #000;
-          padding: 15px;
-          box-sizing: border-box;
-      ">
-
-          <!-- HEADER -->
-          <div style="text-align: center; margin-bottom: 20px;">
-              <h1 style="font-size: 1.6rem; color: #d4b85e;">SM Enterprises</h1>
-              <p style="font-size: 0.8rem; line-height: 1.4; color: #444;">
-                  D no:6/544, Jeenigala Street, Opp: Ramana Reddy Lorry Transport,<br/>
-                  StonehousePet, Nellore-524002.<br/>
-                  SPSR Nellore Dist, ContactNo: 9848430077, 9908024119
-              </p>
-              <div style="height: 3px; width: 60px; background-color: #d4b85e; margin: 12px auto 0; border-radius: 2px;"></div>
-              <p class="date" style="font-size: 0.7rem; text-align: right; color: #555;">
-                  Date: ${dateStr}
-              </p>
-          </div>
-
-          <!-- TITLE -->
-          <h2 style="text-align: left; color: #000; margin-bottom: 15px; border-bottom: 2px solid #d4b85e; display: inline-block; padding-bottom: 4px; font-size: 1.2rem;" class="title">
-              Acoustics Quotation
-          </h2>
-
-          <!-- TABLE -->
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #000; border: 1px solid #ccc;border-bottom: none;">
-              <thead>
-                  <tr>
-                      <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">S.No</th>
-                      <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">Description</th>
-                      <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">SFT</th>
-                      <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">Price</th>
-                      <th style="padding: 6px 4px; text-align: center; color: #d4b85e;">Total Price</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  ${rows.join("")}
-                  <tr>
-                      <td colspan="4" style="padding: 10px; text-align: right; font-weight: 900; font-size: 14px; border-top: 2px solid #d4b85e; text-transform: uppercase; letter-spacing: 0.5px; color: #d4b85e;">
-                          Final Amount:
-                      </td>
-                      <td style="padding: 10px; text-align: center; font-weight: 900; font-size: 14px; border-top: 2px solid #d4b85e; color: #d4b85e;">
-                          ₹ ${total.toLocaleString("en-IN")}
-                      </td>
-                  </tr>
-
-
-              </tbody>
-          </table>
-
-          <!-- FOOTER -->
-        <div style="
-            margin-top: 4px;
-            padding-top: 8px;
-            border-top: 2px solid #d4b85e;
-            color: #444;
-            font-size: 0.475rem;  /* smaller font for list and note */
-            line-height: 1.4;
-        ">
-            <h3 style="color: #d4b85e; margin-bottom: 4px; font-size: 0.85rem;">Materials Used:</h3> <!-- heading stays same -->
-
-            <ul style="margin: 0; padding-left: 16px; font-size: 0.475rem;">
-                <li>19 MM plywood (Oswin, green ply, Sharon etc., as per customer requirement)</li>
-                <li>12 MM plywood</li>
-                <li>8 MM plywood</li>
-                <li>8 MM HDHMR Boards</li>
-                <li>2*1 Aluminium Channels</li>
-                <li>1000 GSM Recron</li>
-                <li>18 MM Wood Wool Sheets</li>
-                <li>Grippers</li>
-                <li>Foam, Cloth,Moshi Cloth, Sunmica</li>
-                <li>14MM Flooring carpet with pile weight 1800 GSM </li>
-
-
-            </ul>
-            <p style="margin: 6px 0 0; font-size: 0.475rem; font-weight: bold;">
-                Note: Electrical work is not included.
-            </p>
-
-
-            <p style="margin-top: 6px; color: #555; font-size: 0.425rem;">
-                *The above materials ensure maximum acoustic performance and premium finish.*
-            </p>
-        </div>
-
-
-         `;
-
-      html2pdf().from(content).set({
-          margin: 0.5,
-          filename: "acoustics-quotation.pdf",
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-      }).save();
-}
+        setAcousticsBusy(true);
+        setAcousticsMeta(quoteMeta()); // today's date and a fresh reference number
+        try {
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            const name = acousticsCustomer.trim();
+            await html2pdf()
+                .from(acousticsRef.current)
+                .set({ ...PDF_OPTIONS, filename: name ? `${name}-acoustics-quotation.pdf` : "acoustics-quotation.pdf" })
+                .save();
+        } catch (err) {
+            console.error("PDF generation failed:", err);
+        } finally {
+            setAcousticsBusy(false);
+        }
+    }
 
     const q = query.trim().toLowerCase();
     const visibleProducts = q
@@ -254,6 +136,11 @@ export default function Create() {
         return a.checked && Number.isFinite(line) ? sum + line : sum;
     }, 0);
     const acousticsSelected = ACOUSTIC_TYPES.filter((t) => acoustics[t].checked).length;
+    const acousticRows = ACOUSTIC_TYPES.filter((t) => acoustics[t].checked).map((t) => {
+        const sft = parseFloat(acoustics[t].sft) || 0;
+        const rate = parseFloat(acoustics[t].price) || 0;
+        return { type: t, label: `${titleCase(t)} Acoustics`, sft, rate, amount: sft * rate };
+    });
 
     return (
         <div className="ui">
@@ -390,6 +277,18 @@ export default function Create() {
                         <p className="muted small">Area in square feet (SFT) · rate in rupees per SFT</p>
                     </div>
 
+                    <label className="field ac-customer">
+                        <span className="field-label">Customer name <span className="optional">(optional)</span></span>
+                        <span className="field-control">
+                            <input
+                                type="text"
+                                value={acousticsCustomer}
+                                onChange={(e) => setAcousticsCustomer(e.target.value)}
+                                placeholder="Shown on the quotation"
+                            />
+                        </span>
+                    </label>
+
                     {ACOUSTIC_TYPES.map((type) => {
                         const a = acoustics[type];
                         const line = parseFloat(a.sft) * parseFloat(a.price);
@@ -447,10 +346,26 @@ export default function Create() {
                             </span>
                             <div className="grand">{inr(acousticsTotal)}</div>
                         </div>
-                        <button type="button" onClick={downloadAcousticsPDF} className="btn btn-gold">
-                            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10" /></svg>
-                            Download Acoustics PDF
+                        <button type="button" onClick={downloadAcousticsPDF} className="btn btn-gold" disabled={acousticsBusy}>
+                            {acousticsBusy ? (
+                                <><span className="spinner" aria-hidden="true" /> Preparing PDF…</>
+                            ) : (
+                                <>
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10" /></svg>
+                                    Download Acoustics PDF
+                                </>
+                            )}
                         </button>
+                    </div>
+
+                    <div style={{ display: "none" }}>
+                        <AcousticsPDF
+                            componentRef={acousticsRef}
+                            meta={acousticsMeta}
+                            rows={acousticRows}
+                            total={acousticsTotal}
+                            customerName={acousticsCustomer.trim()}
+                        />
                     </div>
                 </section>
             )}

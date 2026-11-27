@@ -483,6 +483,9 @@ body {
 
 .acoustics { max-width: 720px; animation: rise 0.5s var(--ease) both; }
 
+.ac-customer { margin-bottom: 14px; }
+.optional { color: var(--faint); font-weight: 400; }
+
 .ac-row {
   border-top: 1px solid var(--line);
   padding: 4px 0;

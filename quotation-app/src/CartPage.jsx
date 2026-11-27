@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { CartContext } from "./CartContext";
 import Stepper from "./Stepper";
 import { inr } from "./format";
+import { QuotationPDF } from "./pdf";
+import { quoteMeta, PDF_OPTIONS } from "./pdfData";
 import "./quotation.css";
 
 export default function CartPage() {
@@ -21,6 +23,7 @@ export default function CartPage() {
     const [includeMediaPlayer, setIncludeMediaPlayer] = useState(false);
     const [mediaPlayerPrice, setMediaPlayerPrice] = useState("");
     const [downloading, setDownloading] = useState(false);
+    const [meta, setMeta] = useState(() => quoteMeta());
 
     const parsedDiscount = parseFloat(discountInput);
     const discount = isNaN(parsedDiscount) ? 0 : parsedDiscount;
@@ -97,19 +100,13 @@ export default function CartPage() {
             const element = componentRef.current;
             if (!element) return;
             setDownloading(true);
+            setMeta(quoteMeta()); // today's date and a fresh reference number
 
             await new Promise((resolve) => setTimeout(resolve, 500));
 
             await html2pdf()
                 .from(element)
-                .set({
-                    filename: `${customerName || "untitled"}-quotation.pdf`,
-                    margin: [15, 10, 15, 10],
-                    image: { type: "jpeg", quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-                    pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.avoid-break'] }
-                })
+                .set({ ...PDF_OPTIONS, filename: `${customerName || "untitled"}-quotation.pdf` })
                 .save();
         } catch (error) {
             console.error("PDF generation failed:", error);
@@ -320,8 +317,9 @@ export default function CartPage() {
             </div>
 
             <div style={{ display: "none" }}>
-                <PDFQuotation
+                <QuotationPDF
                     componentRef={componentRef}
+                    meta={meta}
                     baseCartItems={baseCartItems}
                     postDiscountItems={postDiscountItems}
                     productsSubtotal={productsSubtotal}
@@ -336,179 +334,3 @@ export default function CartPage() {
         </>
     );
 }
-
-function PDFQuotation({
-                          componentRef,
-                          baseCartItems,
-                          postDiscountItems,
-                          productsSubtotal,
-                          discount,
-                          discountAmount,
-                          subtotalAfterDiscount,
-                          finalTotal,
-                          quotationTitle,
-                          customerName,
-                      }) {
-    const renderDescription = (description) => {
-        return description.split("\n").map((line, index) => (
-            <p key={index} style={{ margin: "2px 0" }}>{line}</p>
-        ));
-    };
-
-    const formatter = new Intl.NumberFormat('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-
-    return (
-        <div
-            ref={componentRef}
-            style={{
-                padding: "20px",
-                fontFamily: "'Poppins', sans-serif",
-                backgroundColor: "#ffffff",
-                color: "#000",
-                maxWidth: "900px",
-                margin: "0 auto",
-                borderRadius: "10px",
-            }}
-        >
-            <div style={{ textAlign: "center", marginBottom: "25px" }}>
-                <h1 style={{ margin: "0 0 10px 0", fontSize: "2.5rem", color: "#d4b85e" }}>
-                    SM Enterprises
-                </h1>
-                <p style={{ color: "#444", marginBottom: 0, whiteSpace: "pre-line" }}>
-                    D no:6/544, Jeenigala Street, Opp: Ramana Reddy Lorry Transport,
-                    StonehousePet, Nellore-524002.
-                    SPSR Nellore Dist, ContactNo: 9848430077, 9908024119
-                </p>
-                <p style={{ fontSize: "0.95rem", textAlign: "right", color: "#555" }}>
-                    Date: {new Date().toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                })}
-                </p>
-            </div>
-
-            {customerName && (
-                <p style={{ textAlign: "left", fontSize: "1rem", color: "#222", marginTop: "10px", marginLeft: "20px" }}>
-                    Client: <span style={{ fontWeight: "600", color: "#000" }}>{customerName}</span>
-                </p>
-            )}
-
-            <div>
-                <h2
-                    style={{
-                        textAlign: "center",
-                        color: "#000",
-                        margin: "30px 0 10px 0",
-                        fontSize: "1.5rem",
-                        borderBottom: "2px solid #d4b85e",
-                        paddingBottom: "8px",
-                    }}
-                >
-                    {quotationTitle}
-                </h2>
-
-                {/* Main products table layout */}
-                <table
-                    style={{
-                        width: "100%",
-                        borderCollapse: "collapse",
-                        marginTop: "25px",
-                        fontSize: "0.9rem",
-                    }}
-                >
-                    <thead>
-                    <tr style={{ backgroundColor: "#f3f3f3", color: "#d4b85e" }}>
-                        <th style={headerCell}>S.No</th>
-                        <th style={headerCell}>Name</th>
-                        <th style={headerCell}>Description</th>
-                        <th style={headerCell}>Price (₹)</th>
-                        <th style={headerCell}>Qty</th>
-                        <th style={headerCell}>Total (₹)</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {baseCartItems.map((item, idx) => (
-                        <tr
-                            key={item.key}
-                            className="table-row"
-                            style={{
-                                background: idx % 2 === 0 ? "#ffffff" : "#f8f8f8",
-                            }}
-                        >
-                            <td style={bodyCell}>{item.sNo}</td>
-                            <td style={bodyCell}>{item.name}</td>
-                            <td style={{ ...bodyCell, fontSize: "0.8rem" }}>
-                                {renderDescription(item.description)}
-                            </td>
-                            <td style={bodyCell}>{Math.round(item.price)}</td>
-                            <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
-                            <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Calculations block strictly bounded to basic items parsing drop logic */}
-            <div className="avoid-break" style={{ textAlign: "right", marginTop: "30px", fontSize: "1rem", lineHeight: "1.8" }}>
-                <p>Catalog Products Subtotal: ₹{formatter.format(productsSubtotal)}</p>
-                <p>Discount ({discount}%): -₹{formatter.format(discountAmount)}</p>
-                <p style={{ fontWeight: "600" }}>Subtotal After Discount: ₹{formatter.format(subtotalAfterDiscount)}</p>
-            </div>
-
-            {/* Post-Discount Table for Power Amp, Media Player, and Kordz Accessories */}
-            {postDiscountItems.length > 0 && (
-                <table
-                    className="avoid-break"
-                    style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px", fontSize: "0.9rem" }}
-                >
-                    <tbody>
-                    {postDiscountItems.map((item, idx) => (
-                        <tr
-                            key={item.key}
-                            className="table-row"
-                            style={{ background: (baseCartItems.length + idx) % 2 === 0 ? "#ffffff" : "#f8f8f8" }}
-                        >
-                            <td style={bodyCell}>{item.sNo}</td>
-                            <td style={bodyCell}>{item.name}</td>
-                            <td style={{ ...bodyCell, fontSize: "0.8rem" }}>
-                                {renderDescription(item.description)}
-                            </td>
-                            <td style={bodyCell}>{Math.round(item.price)}</td>
-                            <td style={{ ...bodyCell, textAlign: "center" }}>{item.quantity}</td>
-                            <td style={bodyCell}>{Math.round(item.totalPrice)}</td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            )}
-
-            <div className="avoid-break" style={{ textAlign: "right", marginTop: "20px", fontSize: "1.2rem", fontWeight: "bold", color: "#d4b85e" }}>
-                Final Amount: ₹{formatter.format(finalTotal)}
-            </div>
-
-            <hr style={{ margin: "30px 0", borderTop: "1px dashed #ccc" }} />
-            <p style={{ textAlign: "center", fontStyle: "italic", color: "#666", marginTop: "20px" }}>
-                Thank you for your business! We look forward to serving you again.
-            </p>
-        </div>
-    );
-}
-
-const headerCell = {
-    padding: "8px",
-    textAlign: "left",
-    fontWeight: "600",
-    borderBottom: "1px solid #ccc",
-};
-
-const bodyCell = {
-    padding: "8px",
-    borderBottom: "1px solid #ddd",
-    color: "#000",
-    fontWeight: "600",
-};
