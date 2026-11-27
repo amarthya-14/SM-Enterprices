@@ -54,16 +54,8 @@ export function amountInWords(amount) {
 
 // ---------- reference, dates ----------
 const longDate = (d) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
-export function quoteMeta(prefix = "SM") {
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, "0");
-    const valid = new Date(now);
-    valid.setDate(valid.getDate() + 15);
-    return {
-        ref: `${prefix}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`,
-        date: longDate(now),
-        validUntil: longDate(valid),
-    };
+export function quoteMeta() {
+    return { date: longDate(new Date()) };
 }
 
 export const ACOUSTIC_MATERIALS = [
@@ -79,6 +71,13 @@ export const ACOUSTIC_MATERIALS = [
     "14 mm flooring carpet with 1800 GSM pile weight",
 ];
 
+// One line per treatment on the acoustics quotation, drawn from the materials list above.
+export const ACOUSTIC_SPECS = {
+    wall: "Fabric-finished acoustic wall panels on 2×1 aluminium channels, with 1000 GSM Recron and 18 mm wood wool sheets",
+    ceiling: "Acoustic ceiling built on 19 mm plywood and 8 mm HDHMR boards, with cloth and Moshi cloth finish",
+    flooring: "14 mm flooring carpet with 1800 GSM pile weight",
+};
+
 export const PDF_OPTIONS = {
     margin: [12, 10, 14, 10],
     image: { type: "jpeg", quality: 0.98 },
@@ -86,3 +85,28 @@ export const PDF_OPTIONS = {
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".avoid-break"] },
 };
+
+/**
+ * Renders `element` to an A4 PDF and saves it, stamping a small footer on every page:
+ * "SM Enterprises · Home Cinema & Acoustics · 27 November 2026" on the left and "Page 1 of 2" on the right.
+ */
+export async function savePdf(html2pdf, element, filename, meta) {
+    const worker = html2pdf().set({ ...PDF_OPTIONS, filename }).from(element).toPdf();
+    await worker.get("pdf").then((pdf) => {
+        const pages = pdf.internal.getNumberOfPages();
+        const w = pdf.internal.pageSize.getWidth();
+        const h = pdf.internal.pageSize.getHeight();
+        for (let i = 1; i <= pages; i++) {
+            pdf.setPage(i);
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(8);
+            pdf.setTextColor(110, 104, 92);
+            pdf.setDrawColor(201, 169, 90);
+            pdf.setLineWidth(0.2);
+            pdf.line(10, h - 9.5, w - 10, h - 9.5);
+            pdf.text(`SM Enterprises  ·  Home Cinema & Acoustics  ·  ${meta.date}`, 10, h - 5.5);
+            pdf.text(`Page ${i} of ${pages}`, w - 10, h - 5.5, { align: "right" });
+        }
+    });
+    await worker.save();
+}

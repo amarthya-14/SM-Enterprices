@@ -5,7 +5,7 @@ import html2pdf from "html2pdf.js";
 import { CartContext } from "./CartContext";
 import { apiGet } from "./api";
 import { AcousticsPDF } from "./pdf";
-import { quoteMeta, PDF_OPTIONS } from "./pdfData";
+import { quoteMeta, savePdf } from "./pdfData";
 import { inr, titleCase } from "./format";
 
 const products = [
@@ -110,14 +110,12 @@ export default function Create() {
         if (incomplete) return setAcousticsError(`Enter the area and rate for ${titleCase(incomplete[0])} Acoustics.`);
 
         setAcousticsBusy(true);
-        setAcousticsMeta(quoteMeta()); // today's date and a fresh reference number
+        const fresh = quoteMeta(); // today's date and a fresh reference number
+        setAcousticsMeta(fresh);
         try {
             await new Promise((resolve) => setTimeout(resolve, 300));
             const name = acousticsCustomer.trim();
-            await html2pdf()
-                .from(acousticsRef.current)
-                .set({ ...PDF_OPTIONS, filename: name ? `${name}-acoustics-quotation.pdf` : "acoustics-quotation.pdf" })
-                .save();
+            await savePdf(html2pdf, acousticsRef.current, name ? `${name}-acoustics-quotation.pdf` : "acoustics-quotation.pdf", fresh);
         } catch (err) {
             console.error("PDF generation failed:", err);
         } finally {

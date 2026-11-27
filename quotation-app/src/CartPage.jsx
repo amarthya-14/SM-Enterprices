@@ -5,7 +5,7 @@ import { CartContext } from "./CartContext";
 import Stepper from "./Stepper";
 import { inr } from "./format";
 import { QuotationPDF } from "./pdf";
-import { quoteMeta, PDF_OPTIONS } from "./pdfData";
+import { quoteMeta, savePdf } from "./pdfData";
 import "./quotation.css";
 
 export default function CartPage() {
@@ -100,14 +100,12 @@ export default function CartPage() {
             const element = componentRef.current;
             if (!element) return;
             setDownloading(true);
-            setMeta(quoteMeta()); // today's date and a fresh reference number
+            const fresh = quoteMeta(); // today's date and a fresh reference number
+            setMeta(fresh);
 
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            await html2pdf()
-                .from(element)
-                .set({ ...PDF_OPTIONS, filename: `${customerName || "untitled"}-quotation.pdf` })
-                .save();
+            await savePdf(html2pdf, element, `${customerName || "untitled"}-quotation.pdf`, fresh);
         } catch (error) {
             console.error("PDF generation failed:", error);
         } finally {
